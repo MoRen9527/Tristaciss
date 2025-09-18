@@ -1,0 +1,85 @@
+# 部署时排除的文件和目录
+
+# 依赖目录
+node_modules/
+.venv/
+venv/
+env/
+
+# 版本控制
+.git/
+.gitignore
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# 环境配置文件（敏感信息）
+.env.local
+.env.development
+.env.test
+*.env.backup
+
+# 日志文件
+*.log
+logs/
+log/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 测试和覆盖率
+coverage/
+.nyc_output/
+.coverage
+.pytest_cache/
+test-results/
+tests/__pycache__/
+
+# 构建输出
+dist/
+build/
+.cache/
+.temp/
+*.tmp
+.next/
+
+# 开发文档和记录
+bug_records/
+docs/development/
+docs/design/
+*.draft.md
+
+# 备份文件
+*.backup
+*.bak
+config_backups/
+
+# 临时文件
+*.temp
+*.tmp
+.tmp/
+
+# 缓存目录
+cache/
+.cache/
+
+# 其他不需要的文件
+*.zip
+*.tar.gz
+*.rar
+.npmrc
+.yarnrc

@@ -1,0 +1,102 @@
+{
+  "providers": {
+    "test_provider": {
+      "api_key": "test_key_123",
+      "base_url": "https://api.test.com",
+      "default_model": "test-model",
+      "enabled": true,
+      "updated_at": "2025-08-16T11:17:23.075378"
+    },
+    "openrouter": {
+      "api_key": "",
+      "base_url": "https://openrouter.ai/api/v1",
+      "default_model": "openai/gpt-4o",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.784998"
+    },
+    "openai": {
+      "api_key": "",
+      "base_url": "https://api.openai.com/v1",
+      "default_model": "gpt-4o",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.704815"
+    },
+    "deepseek": {
+      "api_key": "sk-fe34348dced24f3da9dfcc38bcdf7734",
+      "base_url": "https://api.deepseek.com/v1",
+      "default_model": "deepseek-chat",
+      "enabled": true,
+      "updated_at": "2025-09-07T20:57:06.726333"
+    },
+    "glm": {
+      "api_key": "15a2323847724a62a48280976135dbe7.TnFrReicNY7tTL1p",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4",
+      "default_model": "glm-4.5",
+      "enabled": true,
+      "updated_at": "2025-09-07T20:57:06.719325"
+    },
+    "google": {
+      "api_key": "",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "default_model": "gemini-1.5-pro",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.745126"
+    },
+    "meta": {
+      "api_key": "",
+      "base_url": "https://api.llama-api.com/v1",
+      "default_model": "llama-3.1-70b-instruct",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.798891"
+    },
+    "anthropic": {
+      "api_key": "",
+      "base_url": "https://api.anthropic.com",
+      "default_model": "claude-3-5-sonnet-20241022",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.757328"
+    },
+    "qwen": {
+      "api_key": "",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "default_model": "qwen-plus",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.765571"
+    },
+    "moonshot": {
+      "api_key": "",
+      "base_url": "https://api.moonshot.cn/v1",
+      "default_model": "moonshot-v1-8k",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.772797"
+    },
+    "together": {
+      "api_key": "",
+      "base_url": "https://api.together.xyz/v1",
+      "default_model": "meta-llama/Llama-3-70b-chat-hf",
+      "enabled": false,
+      "updated_at": "2025-09-04T20:30:00.000000"
+    },
+    "groq": {
+      "api_key": "",
+      "base_url": "https://api.groq.com/openai/v1",
+      "default_model": "llama-3.1-70b-versatile",
+      "enabled": false,
+      "updated_at": "2025-09-04T20:30:00.000000"
+    },
+    "modelscope": {
+      "api_key": "",
+      "base_url": "https://api.modelscope.cn/v1",
+      "default_model": "qwen-plus",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.806462"
+    },
+    "huggingface": {
+      "api_key": "",
+      "base_url": "https://api-inference.huggingface.co/v1",
+      "default_model": "microsoft/DialoGPT-medium",
+      "enabled": false,
+      "updated_at": "2025-09-07T20:57:06.816585"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+.save-button-active {
+  background-color: #ff4444 !important;
+  color: #ffffff !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.8) !important;
+  border: 4px solid #ff4444 !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  min-width: 200px !important;
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+  transform: scale(1.1) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+.save-button-inactive {
+  background-color: #666666 !important;
+  color: #ffffff !important;
+  font-weight: normal !important;
+  box-shadow: none !important;
+  border: 2px solid #666666 !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  cursor: not-allowed !important;
+  font-size: 18px !important;
+  min-width: 200px !important;
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+  transform: scale(1) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}

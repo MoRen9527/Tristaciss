@@ -1,0 +1,202 @@
+/* InfoCard.css */
+.info-card {
+  background: linear-gradient(to bottom, rgba(0, 40, 60, 0.8), rgba(0, 20, 30, 0.9));
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #00FFFF;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), 
+              inset 0 0 35px rgba(0, 255, 255, 0.1);
+}
+
+.info-card.pending {
+  animation: pendingPulse 2s infinite;
+}
+
+.card-header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 20, 40, 0.7);
+  border-bottom: 1px solid #00FFFF;
+}
+
+.card-title {
+  color: #00FFFF !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  letter-spacing: 1px !important;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-button {
+  color: #4CAF50 !important;
+  background-color: rgba(76, 175, 80, 0.1) !important;
+  border: 1px solid rgba(76, 175, 80, 0.5) !important;
+}
+
+.confirm-button:hover {
+  background-color: rgba(76, 175, 80, 0.2) !important;
+}
+
+.reject-button {
+  color: #F44336 !important;
+  background-color: rgba(244, 67, 54, 0.1) !important;
+  border: 1px solid rgba(244, 67, 54, 0.5) !important;
+}
+
+.reject-button:hover {
+  background-color: rgba(244, 67, 54, 0.2) !important;
+}
+
+.expand-button {
+  color: #00FFFF !important;
+  background-color: rgba(0, 255, 255, 0.1) !important;
+  border: 1px solid rgba(0, 255, 255, 0.5) !important;
+}
+
+.expand-button:hover {
+  background-color: rgba(0, 255, 255, 0.2) !important;
+}
+
+.card-content {
+  padding: 16px;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+.card-content.expanded {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.card-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.card-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.card-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
+.info-item {
+  margin-bottom: 12px;
+}
+
+.info-label {
+  font-size: 12px !important;
+  color: #E0FFFF !important;
+  opacity: 0.7;
+  margin-bottom: 4px !important;
+}
+
+.info-value {
+  font-size: 14px !important;
+  color: #00FFFF !important;
+  display: flex;
+  align-items: center;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.status-indicator.online {
+  background-color: #4CAF50;
+  box-shadow: 0 0 5px #4CAF50;
+}
+
+.status-indicator.offline {
+  background-color: #F44336;
+  box-shadow: 0 0 5px #F44336;
+}
+
+.thinking-canvas {
+  width: 100%;
+  height: 200px;
+  background-color: rgba(0, 10, 20, 0.5);
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.function-calls {
+  font-family: monospace;
+  font-size: 12px;
+  color: #39FF14;
+}
+
+.function-call {
+  background-color: rgba(0, 10, 20, 0.5);
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  border-left: 2px solid #39FF14;
+}
+
+.digital-avatar-container {
+  width: 100%;
+  height: 200px;
+  background-color: rgba(0, 10, 20, 0.5);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes pendingPulse {
+  0%, 100% { box-shadow: 0 0 5px #FFC107; }
+  50% { box-shadow: 0 0 15px #FFC107; }
+}
+
+/* 科幻装饰元素 */
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00FFFF, transparent);
+  animation: scanLine 4s infinite linear;
+}
+
+@keyframes scanLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+  .card-header {
+    padding: 8px 12px;
+  }
+  
+  .card-title {
+    font-size: 14px !important;
+  }
+  
+  .card-content {
+    padding: 12px;
+  }
+  
+  .thinking-canvas,
+  .digital-avatar-container {
+    height: 150px;
+  }
+}

@@ -1,0 +1,65 @@
+/* ResizableLayout.css - 可调整宽度的布局样式 */
+
+/* 调整手柄样式 */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px; /* 将手柄放在左侧 */
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 1000; /* 增加z-index确保手柄在最上层 */
+  transition: background-color 0.2s ease;
+  background-color: rgba(0, 255, 255, 0.2); /* 添加默认背景色使手柄可见 */
+}
+
+.resize-handle:hover {
+  background-color: rgba(0, 255, 255, 0.5);
+}
+
+.resize-handle:active {
+  background-color: rgba(0, 255, 255, 0.8);
+}
+
+/* 调整时的视觉反馈 */
+.resizing .chat-panel-container,
+.resizing .dashboard-container {
+  transition: none;
+}
+
+/* 调整时的覆盖层，防止选中文本 */
+.resize-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  cursor: ew-resize;
+  display: none;
+}
+
+.resizing .resize-overlay {
+  display: block;
+}
+
+/* AI编程卡片特殊样式 */
+.ai-programming-wrapper {
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ai-programming-card {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 960px) {
+  .resize-handle {
+    display: none; /* 在小屏幕上禁用调整功能 */
+  }
+}

@@ -1,0 +1,197 @@
+/* Layout.css - 科幻主题布局样式 */
+
+.layout-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--dark-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 顶部导航栏 */
+.app-bar {
+  background: linear-gradient(90deg, rgba(1, 11, 20, 0.95), rgba(0, 10, 18, 0.98)) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.2) !important;
+  border-bottom: 1px solid var(--primary-color) !important;
+  z-index: 1200 !important;
+}
+
+.toolbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  padding: 0 1rem !important;
+}
+
+.menu-button {
+  margin-right: 1rem !important;
+  color: var(--primary-color) !important;
+}
+
+.app-title {
+  flex-grow: 1 !important;
+  color: var(--primary-color) !important;
+  font-weight: 500 !important;
+  letter-spacing: 1px !important;
+  text-shadow: 0 0 10px var(--primary-color) !important;
+}
+
+/* 用户区域 */
+.user-section {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+}
+
+.user-avatar {
+  background-color: var(--secondary-color) !important;
+  color: #000 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.user-avatar:hover {
+  box-shadow: 0 0 10px var(--secondary-color) !important;
+}
+
+.login-button {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+
+.login-button:hover {
+  background-color: rgba(0, 255, 255, 0.1) !important;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3) !important;
+}
+
+/* 抽屉菜单 */
+.drawer-paper {
+  width: 240px !important;
+  background: linear-gradient(145deg, rgba(1, 11, 20, 0.95), rgba(0, 10, 18, 0.98)) !important;
+  border-right: 1px solid var(--primary-color) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* 抽屉菜单头部 */
+.drawer-header {
+  padding: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2) !important;
+  margin-bottom: 1rem !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.drawer-title {
+  color: var(--primary-color) !important;
+  font-weight: 500 !important;
+  letter-spacing: 1px !important;
+  text-shadow: 0 0 10px var(--primary-color) !important;
+}
+
+/* 抽屉菜单列表 */
+.drawer-list {
+  padding: 0 !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.drawer-list-item {
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.drawer-list-item:hover {
+  background-color: rgba(0, 255, 255, 0.1) !important;
+}
+
+.drawer-icon {
+  color: var(--primary-color) !important;
+  min-width: 40px !important;
+}
+
+/* 用户相关菜单 */
+.user-list {
+  margin-top: auto !important;
+  border-top: 1px solid rgba(0, 255, 255, 0.2) !important;
+  padding-top: 0.5rem !important;
+}
+
+/* 主内容区域 */
+.main-content {
+  flex: 1 !important;
+  padding-top: 64px !important; /* 导航栏高度 */
+  height: 100% !important;
+  width: 100% !important;
+  overflow: auto !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* 装饰性元素 */
+.drawer-decoration {
+  position: absolute !important;
+  width: 15px !important;
+  height: 15px !important;
+  border-style: solid !important;
+  border-width: 2px !important;
+  border-color: var(--primary-color) !important;
+  z-index: 1 !important;
+}
+
+.top-left {
+  top: 5px !important;
+  left: 5px !important;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+
+.top-right {
+  top: 5px !important;
+  right: 5px !important;
+  border-left: none !important;
+  border-bottom: none !important;
+}
+
+.bottom-left {
+  bottom: 5px !important;
+  left: 5px !important;
+  border-right: none !important;
+  border-top: none !important;
+}
+
+.bottom-right {
+  bottom: 5px !important;
+  right: 5px !important;
+  border-left: none !important;
+  border-top: none !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 1.1rem !important;
+  }
+  
+  .drawer-paper {
+    width: 220px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-title {
+    font-size: 1rem !important;
+  }
+  
+  .drawer-paper {
+    width: 200px !important;
+  }
+  
+  .drawer-list-item {
+    padding: 0.5rem 1.25rem !important;
+  }
+}

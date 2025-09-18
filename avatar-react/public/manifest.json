@@ -1,0 +1,15 @@
+{
+  "short_name": "星球城市",
+  "name": "星球城市 AI数字分身平台",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#39ff14",
+  "background_color": "#001428"
+}

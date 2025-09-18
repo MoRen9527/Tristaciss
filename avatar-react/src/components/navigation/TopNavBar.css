@@ -1,0 +1,324 @@
+/* 顶部导航栏容器 */
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.92) 0%, 
+    rgba(30, 41, 59, 0.88) 25%,
+    rgba(25, 35, 55, 0.9) 50%,
+    rgba(30, 41, 59, 0.88) 75%,
+    rgba(15, 23, 42, 0.92) 100%
+  );
+  backdrop-filter: blur(25px);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.4);
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.25),
+    0 5px 20px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 rgba(0, 255, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.top-navbar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.05), transparent);
+  animation: navbarShimmer 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes navbarShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+.top-navbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--primary-color) 20%, 
+    #00FF88 50%, 
+    var(--primary-color) 80%, 
+    transparent 100%
+  );
+  animation: navbar-scan 3s ease-in-out infinite;
+}
+
+@keyframes navbar-scan {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* 左侧 Logo 区域 */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logo-container:hover {
+  transform: scale(1.05);
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, 
+    #00FFB7 0%, 
+    #00FF88 25%,
+    #00E5FF 50%,
+    #00FF88 75%,
+    #00FFB7 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.6),
+    0 0 40px rgba(0, 255, 183, 0.3),
+    inset 0 0 15px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-icon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.4), 
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: logo-shine 5s ease-in-out infinite;
+}
+
+@keyframes logo-shine {
+  0%, 100% { 
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    opacity: 0;
+  }
+  50% { 
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.brand-name {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  text-shadow: 
+    0 0 15px rgba(0, 255, 255, 0.6),
+    0 0 30px rgba(0, 255, 255, 0.3);
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  animation: brandGlow 4s ease-in-out infinite;
+}
+
+.brand-subtitle {
+  color: #00FFB7 !important;
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  text-shadow: 
+    0 0 12px rgba(0, 255, 183, 0.5),
+    0 0 24px rgba(0, 255, 183, 0.2);
+  line-height: 1 !important;
+  margin: 0 !important;
+  opacity: 0.95;
+  animation: subtitleGlow 5s ease-in-out infinite;
+}
+
+@keyframes brandGlow {
+  0%, 100% { 
+    text-shadow: 
+      0 0 15px rgba(0, 255, 255, 0.6),
+      0 0 30px rgba(0, 255, 255, 0.3);
+  }
+  50% { 
+    text-shadow: 
+      0 0 20px rgba(0, 255, 255, 0.8),
+      0 0 40px rgba(0, 255, 255, 0.4);
+  }
+}
+
+@keyframes subtitleGlow {
+  0%, 100% { 
+    text-shadow: 
+      0 0 12px rgba(0, 255, 183, 0.5),
+      0 0 24px rgba(0, 255, 183, 0.2);
+  }
+  50% { 
+    text-shadow: 
+      0 0 16px rgba(0, 255, 183, 0.7),
+      0 0 32px rgba(0, 255, 183, 0.3);
+  }
+}
+
+/* 中间导航区域 */
+.navbar-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 2rem;
+  gap: 0.5rem;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.center-decoration {
+  position: relative;
+  width: 200px;
+  height: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.decoration-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 255, 255, 0.3) 20%, 
+    rgba(0, 255, 255, 0.6) 50%, 
+    rgba(0, 255, 255, 0.3) 80%, 
+    transparent 100%
+  );
+}
+
+.decoration-pulse {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  box-shadow: 0 0 15px var(--primary-color);
+  animation: pulse-center 2s ease-in-out infinite;
+}
+
+@keyframes pulse-center {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: scale(1.5); 
+    opacity: 1; 
+  }
+}
+
+/* 右侧用户头像区域 */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  height: 100%;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .top-navbar {
+    padding: 0 1rem;
+    height: 80px;
+  }
+  
+  .navbar-center {
+    padding: 0 1rem;
+  }
+  
+  .nav-menu {
+    gap: 0.5rem;
+  }
+  
+  .nav-menu button {
+    font-size: 0.8rem !important;
+    padding: 4px 8px !important;
+  }
+  
+  .center-decoration {
+    width: 100px;
+  }
+  
+  .brand-name {
+    font-size: 1.1rem !important;
+  }
+  
+  .brand-subtitle {
+    font-size: 0.7rem !important;
+  }
+  
+  .logo-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-info {
+    display: none;
+  }
+}
+
+/* 导航栏激活状态 */
+.top-navbar.active {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.98) 0%, 
+    rgba(30, 41, 59, 0.98) 50%, 
+    rgba(15, 23, 42, 0.98) 100%
+  );
+  box-shadow: 
+    0 0 25px rgba(0, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 255, 255, 0.5);
+}

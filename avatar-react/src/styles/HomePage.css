@@ -1,0 +1,1063 @@
+/* 只隐藏外层容器的滚动条，保留内部必要的滚动条 */
+
+/* 主容器样式 */
+.home-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 183, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(0, 229, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 60% 20%, rgba(57, 255, 20, 0.04) 0%, transparent 50%),
+    linear-gradient(135deg, 
+      #000814 0%, 
+      #001428 20%,
+      #001d3d 40%, 
+      #002040 60%,
+      #001d3d 80%,
+      #000814 100%
+    );
+  color: #00ffff;
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* 星空背景 */
+.stars-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(0, 255, 255, 0.8) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: twinkle 4s infinite alternate;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(0, 255, 255, 0.4);
+}
+
+@keyframes twinkle {
+  0% { 
+    opacity: 0.3; 
+    transform: scale(0.8);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.6), 0 0 8px rgba(0, 255, 255, 0.3);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(0, 255, 255, 0.6);
+  }
+  100% { 
+    opacity: 0.3; 
+    transform: scale(0.8);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.6), 0 0 8px rgba(0, 255, 255, 0.3);
+  }
+}
+
+/* 星云背景 */
+.nebula-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 35%, rgba(0, 80, 150, 0.2) 0%, rgba(0, 50, 100, 0.1) 30%, transparent 60%),
+    radial-gradient(circle at 75% 65%, rgba(0, 150, 150, 0.15) 0%, rgba(0, 100, 120, 0.08) 25%, transparent 55%),
+    radial-gradient(circle at 50% 20%, rgba(0, 100, 200, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 30% 80%, rgba(0, 120, 180, 0.1) 0%, transparent 45%);
+  z-index: 1;
+  pointer-events: none;
+  animation: nebulaFloat 20s ease-in-out infinite;
+}
+
+@keyframes nebulaFloat {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: scale(1) rotate(0deg);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.05) rotate(0.5deg);
+  }
+}
+
+/* 欢迎界面 */
+.welcome-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  animation: fadeIn 1.5s ease-in-out;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(0, 50, 100, 0.1) 0%, transparent 60%);
+}
+
+.welcome-content {
+  width: 80%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  backdrop-filter: blur(10px);
+  background: rgba(0, 20, 40, 0.3);
+  border-radius: 0;
+  padding: 3rem;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 
+    0 0 40px rgba(0, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.welcome-title-container {
+  position: relative;
+  width: 100%;
+  text-align: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.welcome-title-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+  animation: welcomeShimmer 3s ease-in-out infinite;
+}
+
+@keyframes welcomeShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+.sci-fi-title {
+  font-size: 1rem;
+  font-weight: 300;
+  color: #00ffff;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+.sci-fi-subtitle {
+  font-size: 1rem;
+  color: #00cccc;
+  text-shadow: 0 0 5px rgba(0, 204, 204, 0.7);
+  letter-spacing: 1px;
+}
+
+.scanning-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: #00ffff;
+  box-shadow: 0 0 10px #00ffff;
+  animation: scan 30s infinite;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+/* 加载进度 */
+.loading-progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progress-container {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00ffff, #00ccff);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+  transition: width 0.5s ease-in-out;
+}
+
+.loading-text {
+  color: #00ffff;
+  font-size: 1rem;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
+}
+
+/* 系统状态 */
+.system-status {
+  width: 100%;
+  padding: 1rem;
+  background-color: rgba(0, 20, 40, 0.7);
+  border-radius: 0;
+}
+
+.status-line {
+  margin-bottom: 0.5rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.status-line.active {
+  color: #00ffff;
+  text-shadow: 0 0 1.5px rgba(0, 255, 255, 0.7);
+}
+
+.status-icon {
+  color: inherit;
+  font-size: 0.8rem;
+}
+
+.status-line.active .status-icon {
+  animation: pulse 5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* 科幻边框 */
+.sci-fi-border {
+  border: 1px solid rgba(0, 50, 255, 0.1);
+  box-shadow: 0 0 10px rgba(120, 142, 142, 0.1);
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.sci-fi-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  animation: scanBorder 4.5s infinite;
+}
+
+@keyframes scanBorder {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* 主内容区域 */
+.main-stage {
+  position: absolute;
+  top: 70px; /* 为顶部导航栏留出空间 */
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 70px); /* 使用视口高度减去导航栏高度 */
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  padding: 0; /* 移除内边距让容器占满整个区域 */
+  box-sizing: border-box;
+}
+
+/* 响应式调整 - 移动端 */
+@media (max-width: 768px) {
+  .main-stage {
+    top: 60px; /* 移动端导航栏高度调整 */
+    height: calc(100vh - 60px);
+  }
+}
+
+.main-stage.active {
+  opacity: 1;
+}
+
+/* 覆盖Layout的main-content样式，专门为HomePage */
+/* 使用更高特异性的选择器替代 !important */
+.home-container .homepage-container .main-content,
+.home-container .main-stage .main-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止外层滚动条 */
+  padding: 0; /* 移除所有内边距 */
+  margin: 0; /* 移除所有外边距 */
+  box-sizing: border-box;
+}
+
+.home-container .content-row {
+  height: 100%;
+  overflow: hidden; /* 防止Grid容器出现滚动条 */
+  margin: 0; /* 移除Grid容器的外边距 */
+  padding: 0; /* 移除Grid容器的内边距 */
+  box-sizing: border-box;
+}
+
+/* 使用更高特异性的选择器 - Grid项目不产生滚动条 */
+.home-container .content-row > .MuiGrid-item {
+  overflow: hidden;
+  padding: 0; /* 移除Grid项目的内边距 */
+  margin: 0; /* 移除Grid项目的外边距 */
+  box-sizing: border-box;
+}
+
+/* 使用更高特异性的选择器 - 特别针对聊天面板的Grid项目 */
+.home-container .content-row > .chat-panel-container.MuiGrid-item {
+  overflow: hidden;
+  max-height: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* 确保Dashboard容器的Grid项目也占满空间 */
+.home-container .content-row > .dashboard-container.MuiGrid-item {
+  overflow: hidden;
+  max-height: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* 覆盖Material-UI Grid的默认样式 */
+.home-container .MuiGrid-container {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.home-container .MuiGrid-container > .MuiGrid-item {
+  padding-left: 0;
+  padding-top: 0;
+  box-sizing: border-box;
+}
+
+/* 额外的高特异性选择器确保滚动条隐藏 */
+/* .home-container .MuiGrid-container .MuiGrid-item {
+  overflow: hidden;
+}
+
+.home-container .MuiGrid-container .chat-panel-container {
+  overflow: hidden;
+} */
+
+/* .home-container .MuiGrid-container .dashboard-container {
+  overflow: hidden;
+} */
+
+/* 特别针对Dashboard组件的滚动条隐藏 */
+/* .home-container .dashboard-container > div[style*="overflowY"] {
+  overflow: hidden;
+} */
+
+/* .home-container .dashboard-container .MuiBox-root {
+  overflow: hidden;
+} */
+
+/* 使用属性选择器隐藏Dashboard的滚动条 */
+/* .home-container [data-testid="dashboard"] {
+  overflow: hidden;
+} */
+
+/* 更精确的Dashboard滚动条隐藏 */
+/* .home-container .MuiGrid-item .dashboard-container .MuiBox-root:first-child {
+  overflow: hidden;
+} */
+
+/* 科幻渐变背景 */
+.sci-fi-gradient {
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 30, 60, 0.85) 0%, 
+      rgba(0, 50, 80, 0.75) 25%,
+      rgba(0, 40, 70, 0.8) 50%,
+      rgba(0, 35, 65, 0.85) 75%,
+      rgba(0, 25, 50, 0.9) 100%
+    );
+  border-radius: 0; /* 移除圆角让容器完全贴合 */
+  padding: 0; /* 移除内边距 */
+  margin: 0; /* 移除外边距 */
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(15px);
+  border: none; /* 移除默认边框，使用自定义分割线 */
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 255, 255, 0.2);
+  box-sizing: border-box;
+}
+
+.sci-fi-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+  animation: shimmerPanel 20s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes shimmerPanel {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+/* 面板样式 */
+.sci-fi-panel {
+  height: 100%;
+  width: 100%;
+  border: none; /* 移除默认边框 */
+  border-radius: 0; /* 移除圆角让面板完全贴合 */
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 15, 30, 0.95) 0%, 
+      rgba(0, 25, 45, 0.9) 25%,
+      rgba(0, 20, 40, 0.92) 50%,
+      rgba(0, 18, 35, 0.94) 75%,
+      rgba(0, 12, 25, 0.96) 100%
+    );
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 0 25px rgba(0, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 255, 255, 0.3);
+  padding: 0; /* 移除内边距 */
+  margin: 0; /* 移除外边距 */
+  box-sizing: border-box;
+}
+
+.sci-fi-panel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: 
+    linear-gradient(45deg, transparent 30%, rgba(0, 255, 255, 0.03) 50%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 聊天面板容器特殊设置 */
+.chat-panel-container .sci-fi-panel {
+  overflow: hidden; /* 确保聊天面板容器不出现滚动条 */
+}
+
+.sci-fi-panel.panel-active {
+  opacity: 0.8;
+  transform: translateY(0);
+  box-shadow: 
+    0 0 35px rgba(0, 255, 255, 0.3),
+    0 0 60px rgba(0, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 255, 255, 0.4);
+}
+
+/* 扫描线效果 */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 255, 255, 0.3) 20%, 
+    rgba(0, 255, 255, 0.9) 50%, 
+    rgba(0, 255, 255, 0.3) 80%, 
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 15px rgba(0, 255, 255, 0.8),
+    0 0 30px rgba(0, 255, 255, 0.4);
+  opacity: 0;
+  z-index: 3;
+  border-radius: 2px;
+}
+
+.scan-active .scan-line {
+  animation: scanPanel 60s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes scanPanel {
+  0% { 
+    top: 0; 
+    opacity: 0;
+    transform: scaleX(0.5);
+  }
+  10% {
+    opacity: 0.8;
+    transform: scaleX(1);
+  }
+  90% {
+    opacity: 0.8;
+    transform: scaleX(1);
+  }
+  100% { 
+    top: calc(100% - 3px); 
+    opacity: 0;
+    transform: scaleX(0.5);
+  }
+}
+
+/* 对接接口效果 */
+.docking-port {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 48px;
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 255, 255, 0.4) 0%, 
+      rgba(0, 200, 255, 0.6) 50%, 
+      rgba(0, 255, 255, 0.4) 100%
+    );
+  border: 2px solid rgba(0, 255, 255, 0.7);
+  z-index: 2;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    inset 0 0 10px rgba(0, 255, 255, 0.3);
+  animation: dockingPulse 3s ease-in-out infinite;
+}
+
+@keyframes dockingPulse {
+  0%, 100% { 
+    box-shadow: 
+      0 0 15px rgba(0, 255, 255, 0.4),
+      inset 0 0 8px rgba(0, 255, 255, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      0 0 25px rgba(0, 255, 255, 0.7),
+      inset 0 0 15px rgba(0, 255, 255, 0.4);
+  }
+}
+
+.chat-panel-container .docking-port {
+  right: -12px;
+  border-radius: 0 8px 8px 0;
+}
+
+.dashboard-container .docking-port {
+  left: -12px;
+  border-radius: 8px 0 0 8px;
+}
+
+/* 引擎光晕效果 */
+.chat-panel-engine-glow,
+.dashboard-panel-engine-glow {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle, 
+      rgba(0, 255, 255, 0.8) 0%, 
+      rgba(0, 255, 255, 0.4) 30%,
+      rgba(0, 200, 255, 0.2) 60%,
+      transparent 80%
+    );
+  filter: blur(8px);
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+}
+
+.chat-panel-engine-glow {
+  bottom: 6rem;
+  right: 0.5rem;
+  animation: enginePulse 2.5s ease-in-out infinite alternate;
+}
+
+.dashboard-panel-engine-glow {
+  bottom: 0.2rem;
+  left: 0.2rem;
+  animation: enginePulse 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes enginePulse {
+  0% { 
+    opacity: 0.6; 
+    transform: scale(0.9);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1.1);
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+  }
+}
+
+/* 面板容器 */
+.chat-panel-container,
+.dashboard-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止外层容器出现滚动条 */
+  padding: 0; /* 移除内边距 */
+  margin: 0; /* 移除外边距 */
+  box-sizing: border-box;
+}
+
+/* 精确控制：只隐藏外层容器滚动条，保留内部滚动条 */
+.chat-panel-container {
+  overflow: hidden; /* 只隐藏最外层容器滚动条 */
+}
+
+.chat-panel-container .sci-fi-gradient {
+  overflow: hidden; /* 隐藏渐变容器滚动条 */
+}
+
+.chat-panel-container .sci-fi-panel {
+  overflow: hidden; /* 隐藏面板容器滚动条 */
+}
+
+/* 恢复内部必要的滚动条 */
+.chat-panel-container .chat-container {
+  overflow-y: auto; /* 恢复聊天内容滚动条 */
+  overflow-x: hidden;
+}
+
+/* 飞船特效 */
+.spaceship-effects-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.spaceship-effects-container.active {
+  opacity: 1;
+}
+
+.engine-glow {
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle, 
+      rgba(0, 255, 255, 0.9) 0%, 
+      rgba(0, 200, 255, 0.6) 30%,
+      rgba(0, 150, 255, 0.3) 60%,
+      transparent 80%
+    );
+  filter: blur(15px);
+  animation: enginePulse 2.5s ease-in-out infinite alternate;
+  pointer-events: none;
+  box-shadow: 0 0 60px rgba(0, 255, 255, 0.8);
+}
+
+@keyframes enginePulse {
+  0% { 
+    opacity: 0.6; 
+    transform: translateX(-50%) scale(0.8);
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateX(-50%) scale(1.2);
+    box-shadow: 0 0 80px rgba(0, 255, 255, 1);
+  }
+}
+
+.ion-trail {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to top, 
+    transparent 0%, 
+    rgba(0, 255, 255, 0.3) 20%,
+    rgba(0, 255, 255, 0.8) 60%,
+    rgba(0, 255, 255, 0.4) 90%,
+    transparent 100%
+  );
+  filter: blur(2px);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+}
+
+.ion-trail-left {
+  left: calc(50% - 25px);
+  height: 90px;
+  animation: trailPulse 3.5s ease-in-out infinite alternate;
+}
+
+.ion-trail-center {
+  left: 50%;
+  height: 140px;
+  animation: trailPulse 2.5s ease-in-out infinite alternate;
+  width: 4px;
+}
+
+.ion-trail-right {
+  left: calc(50% + 25px);
+  height: 90px;
+  animation: trailPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes trailPulse {
+  0% { 
+    height: 80px; 
+    opacity: 0.6;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+  }
+  100% { 
+    height: 140px; 
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+  }
+}
+
+.flight-path {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 255, 255, 0.2) 20%,
+    rgba(0, 255, 255, 0.6) 50%, 
+    rgba(0, 255, 255, 0.2) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  animation: flightPathPulse 4s ease-in-out infinite;
+}
+
+@keyframes flightPathPulse {
+  0%, 100% { 
+    opacity: 0.5;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  }
+  50% { 
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+  }
+}
+
+.flight-path {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+}
+
+
+
+/* 用户信息 */
+.user-info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  background-color: rgba(0, 20, 40, 0.1);
+  z-index: 100;
+  font-size: 0.8rem;
+  color: #00ffff;
+}
+
+/* 响应式调整 */
+@media (max-width: 960px) {
+  .content-row {
+    flex-direction: column;
+  }
+  
+  .chat-panel-container,
+  .dashboard-container {
+    height: 50vh;
+    margin-bottom: 1rem;
+  }
+  
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* 宽度指示器动画 */
+@keyframes fadeInOut {
+  0% { 
+    opacity: 0; 
+    transform: translateY(-50%) scale(0.8);
+  }
+  20% { 
+    opacity: 1; 
+    transform: translateY(-50%) scale(1);
+  }
+  80% { 
+    opacity: 1; 
+    transform: translateY(-50%) scale(1);
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(-50%) scale(0.8);
+  }
+}
+
+/* 拖拽手柄增强样式 */
+.resize-handle {
+  position: relative;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 255, 255, 0.3) 20%,
+    rgba(0, 255, 255, 0.8) 50%,
+    rgba(0, 255, 255, 0.3) 80%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.resize-handle:hover::before {
+  opacity: 1;
+}
+
+/* 调整中的视觉反馈 */
+.resizing {
+  user-select: none;
+}
+
+.resizing .resize-handle {
+  background-color: rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+}
+
+.resizing .resize-handle::before {
+  opacity: 1;
+  animation: resizePulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes resizePulse {
+  0% { 
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 255, 255, 0.3) 20%,
+      rgba(0, 255, 255, 0.8) 50%,
+      rgba(0, 255, 255, 0.3) 80%,
+      transparent 100%
+    );
+  }
+  100% { 
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 255, 255, 0.6) 20%,
+      rgba(0, 255, 255, 1) 50%,
+      rgba(0, 255, 255, 0.6) 80%,
+      transparent 100%
+    );
+  }
+}
+
+/* 精美的面板分割线 */
+.chat-panel-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 255, 255, 0.2) 10%,
+    rgba(0, 255, 255, 0.6) 30%,
+    rgba(0, 255, 255, 0.8) 50%,
+    rgba(0, 255, 255, 0.6) 70%,
+    rgba(0, 255, 255, 0.2) 90%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 3px rgba(0, 255, 255, 0.4),
+    0 0 6px rgba(0, 255, 255, 0.2);
+  z-index: 10;
+  animation: dividerPulse 4s ease-in-out infinite;
+}
+
+/* 分割线脉冲动画 */
+@keyframes dividerPulse {
+  0%, 100% {
+    opacity: 0.6;
+    box-shadow: 
+      0 0 2px rgba(0, 255, 255, 0.3),
+      0 0 4px rgba(0, 255, 255, 0.1);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 
+      0 0 4px rgba(0, 255, 255, 0.5),
+      0 0 8px rgba(0, 255, 255, 0.3);
+  }
+}
+
+/* 分割线上的装饰节点 */
+.chat-panel-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -2px;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, rgba(0, 255, 255, 1) 0%, rgba(0, 255, 255, 0.3) 70%, transparent 100%);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 
+    0 0 6px rgba(0, 255, 255, 0.8),
+    0 0 12px rgba(0, 255, 255, 0.4);
+  z-index: 11;
+  animation: nodePulse 3s ease-in-out infinite;
+}
+
+/* 节点脉冲动画 */
+@keyframes nodePulse {
+  0%, 100% {
+    transform: translateY(-50%) scale(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* 确保分割线容器有相对定位 */
+.chat-panel-container {
+  position: relative;
+}
+
+.dashboard-container {
+  position: relative;
+}
+
+/* 顶部和底部的装饰节点 */
+.content-row::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  background: rgba(0, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+  z-index: 12;
+  animation: topNodeGlow 5s ease-in-out infinite;
+}
+
+.content-row::after {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  background: rgba(0, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+  z-index: 12;
+  animation: bottomNodeGlow 5s ease-in-out infinite reverse;
+}
+
+@keyframes topNodeGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.3);
+  }
+}
+
+@keyframes bottomNodeGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.3);
+  }
+}
+
+/* 确保content-row有相对定位 */
+.content-row {
+  position: relative;
+}

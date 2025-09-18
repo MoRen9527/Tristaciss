@@ -1,0 +1,65 @@
+# 依赖目录
+node_modules/
+.venv/
+venv/
+env/
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# 环境配置文件
+.env
+.env.local
+.env.development
+.env.test
+.env.production.local
+
+# 日志文件
+*.log
+logs/
+log/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 测试和覆盖率
+coverage/
+.nyc_output/
+.coverage
+.pytest_cache/
+test-results/
+
+# 构建输出
+dist/
+build/
+.cache/
+.temp/
+*.tmp
+.next/
+
+# 开发记录
+bug_records/
+docs/development/
+
+# 备份文件
+*.backup
+*.bak
+config_backups/
+
+# 缓存
+cache/
+.cache/

@@ -1,0 +1,504 @@
+/* UserAvatar.css - 青色用户头像组件样式 */
+
+.user-avatar-container {
+  position: fixed;
+  top: 12px;
+  right: 20px;
+  z-index: 10000;
+}
+
+/* 用户头像按钮 - 淡青色内部发光效果 */
+.user-avatar-container .user-avatar-button {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 0;
+  background: rgba(0, 150, 180, 0.1);
+  border: 2px solid rgba(0, 150, 180, 0.6);
+  outline: 2px solid rgba(0, 150, 180, 0.3);
+  outline-offset: 2px;
+  box-shadow: 
+    0 0 20px rgba(0, 150, 180, 0.4),
+    inset 0 0 40px rgba(0, 150, 180, 0.6);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar-container .user-avatar-button:hover {
+  background: rgba(0, 150, 180, 0.15);
+  border-color: rgba(0, 150, 180, 0.8);
+  outline-color: rgba(0, 150, 180, 0.5);
+  box-shadow: 
+    0 0 25px rgba(0, 150, 180, 0.6),
+    inset 0 0 45px rgba(0, 150, 180, 0.7);
+}
+
+/* 科幻头像样式 - 白色人像图标 */
+.user-avatar-container .user-avatar-button .sci-fi-avatar {
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  color: #ffffff;
+  font-weight: normal;
+  font-size: 24px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  text-shadow: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 确保PersonIcon样式 */
+.user-avatar-container .user-avatar-button .sci-fi-avatar .MuiSvgIcon-root {
+  color: #ffffff;
+  font-size: 24px;
+}
+
+/* 头像悬停效果 */
+.user-avatar-container .user-avatar-button .sci-fi-avatar:hover {
+  color: #ffffff;
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.user-avatar-container .user-avatar-button .sci-fi-avatar:hover .MuiSvgIcon-root {
+  color: #ffffff;
+}
+
+/* 菜单样式 */
+.user-avatar-container .user-menu {
+  background: rgba(0, 20, 40, 0.95);
+  border: 1px solid #00ffff;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.user-avatar-container .user-menu .MuiMenuItem-root {
+  color: #ffffff;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  margin: 2px 4px;
+}
+
+.user-avatar-container .user-menu .MuiMenuItem-root:hover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.user-avatar-container .user-menu .MuiDivider-root {
+  border-color: rgba(0, 255, 255, 0.3);
+  margin: 4px 0;
+}
+
+/* 菜单面板样式 */
+.user-avatar-container .user-menu-panel {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  min-width: 320px;
+  max-width: 400px;
+  background: linear-gradient(135deg, rgba(13, 26, 42, 0.95), rgba(1, 11, 20, 0.98));
+  border: 1px solid #00ffff;
+  box-shadow: 0 8px 32px rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 99999;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.user-avatar-container .user-menu-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  display: block;
+}
+
+/* 用户信息头部 */
+.user-avatar-container .user-menu-header {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(0, 255, 183, 0.3) 25%,
+    rgba(0, 255, 136, 0.4) 50%,
+    rgba(0, 255, 255, 0.3) 75%, 
+    rgba(0, 229, 255, 0.9) 100%);
+  color: #ffffff;
+  padding: 24px 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar-container .user-menu-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  animation: header-scan 6s ease-in-out infinite;
+}
+
+@keyframes header-scan {
+  0% { left: -100%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* 其他菜单样式保持不变 */
+.user-avatar-container .header-status-indicator {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 10;
+}
+
+.user-avatar-container .header-status-indicator .status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #00ff88;
+  box-shadow: 0 0 15px #00ff88, 0 0 25px rgba(0, 255, 136, 0.5);
+  animation: status-pulse-enhanced 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse-enhanced {
+  0%, 100% { 
+    opacity: 0.8; 
+    transform: scale(1);
+    box-shadow: 0 0 15px #00ff88, 0 0 25px rgba(0, 255, 136, 0.5);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2);
+    box-shadow: 0 0 25px #00ff88, 0 0 40px rgba(0, 255, 136, 0.8);
+  }
+}
+
+/* 紧凑布局样式 */
+.user-avatar-container .user-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.user-avatar-container .user-info-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.user-avatar-container .avatar-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-avatar-container .avatar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar-container .user-menu-avatar {
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 229, 255, 0.35);
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 20px;
+  border: 2px solid #00ffff;
+  border-radius: 6px;
+  box-shadow: 0 0 15px #00ffff, inset 0 0 10px #00ffff;
+  text-shadow: 0 0 12px #00ffff, 0 0 25px #00ffff;
+  transition: all 0.3s ease;
+}
+
+.user-avatar-container .user-menu-avatar:hover {
+  background: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 25px #00ffff, inset 0 0 15px #00ffff;
+  transform: scale(1.02);
+}
+
+.user-avatar-container .avatar-glow {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border-radius: 8px;
+  background: conic-gradient(
+    from 0deg, 
+    #0f172a, 
+    #00ffb7, 
+    #00ff88,
+    #00ffff,
+    #0f172a
+  );
+  opacity: 0.6;
+  z-index: -1;
+  filter: blur(4px);
+  animation: avatar-rotate 5s linear infinite;
+}
+
+@keyframes avatar-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.user-avatar-container .user-name-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.user-avatar-container .username {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.8px;
+  line-height: 1.2;
+}
+
+.user-avatar-container .status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #00ff88;
+  text-shadow: 0 0 8px #00ff88;
+  margin: 0;
+  padding: 2px 8px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  width: fit-content;
+}
+
+.user-avatar-container .location-row {
+  position: absolute;
+  top: -8px;
+  right: -20px;
+  z-index: 3;
+}
+
+.user-avatar-container .location-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  margin: 0;
+  opacity: 0.9;
+  background: rgba(0, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  white-space: nowrap;
+  position: relative;
+  top: 15px;
+  left: -30px;
+}
+
+/* 菜单内容样式 */
+.user-avatar-container .user-menu-content {
+  padding: 20px;
+  color: #ffffff;
+}
+
+/* 用户详细信息 */
+.user-avatar-container .user-details {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-avatar-container .user-details::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  opacity: 0.6;
+}
+
+.user-avatar-container .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 8px 0;
+  min-height: 28px;
+}
+
+.user-avatar-container .info-row:last-child {
+  margin-bottom: 0;
+}
+
+.user-avatar-container .info-label {
+  color: #ffffff;
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
+  padding-right: 16px;
+}
+
+.user-avatar-container .info-value {
+  color: #00ffff;
+  font-weight: bold;
+  text-shadow: 0 0 5px #00ffff;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  flex: 1;
+  text-align: right;
+}
+
+/* 操作按钮区域 */
+.user-avatar-container .menu-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.user-avatar-container .menu-action-btn {
+  flex: 1;
+  border-color: #00ffff;
+  color: #00ffff;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 36px;
+}
+
+.user-avatar-container .menu-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.user-avatar-container .menu-action-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.user-avatar-container .menu-action-btn:hover::before {
+  left: 100%;
+}
+
+/* 特定按钮样式 */
+.user-avatar-container .refresh-btn:hover {
+  border-color: #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+.user-avatar-container .settings-btn:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
+}
+
+.user-avatar-container .logout-btn {
+  border-color: #ff4757;
+  color: #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+  margin-top: 8px;
+}
+
+.user-avatar-container .logout-btn:hover {
+  background: rgba(255, 71, 87, 0.2);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+}
+
+/* 分割线样式 */
+.user-avatar-container .menu-divider {
+  background-color: #00ffff;
+  opacity: 0.3;
+  margin: 16px 0;
+  height: 1px;
+  position: relative;
+}
+
+.user-avatar-container .menu-divider::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  box-shadow: 0 0 5px #00ffff;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .user-avatar-container {
+    top: 10px;
+    right: 15px;
+  }
+  
+  .user-avatar-container .user-avatar-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .user-avatar-container .user-avatar-button .sci-fi-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .user-avatar-container .user-avatar-button .sci-fi-avatar .MuiSvgIcon-root {
+    font-size: 20px;
+  }
+  
+  .user-avatar-container .menu-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .user-avatar-container .menu-action-btn {
+    width: 100%;
+  }
+}

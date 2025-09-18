@@ -1,0 +1,62 @@
+/* 登录页面容器 */
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #010b14 0%, #001122 50%, #010b14 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 星空背景效果 */
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(57, 255, 20, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+    radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+    radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+    radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: stars 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes stars {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-100px); }
+}
+
+/* 登录卡片动画 */
+.login-paper {
+  animation: cardGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes cardGlow {
+  from {
+    box-shadow: 
+      0 0 30px rgba(57, 255, 20, 0.3),
+      0 0 60px rgba(0, 255, 255, 0.2);
+  }
+  to {
+    box-shadow: 
+      0 0 40px rgba(57, 255, 20, 0.4),
+      0 0 80px rgba(0, 255, 255, 0.3);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .login-container {
+    padding: 16px;
+  }
+}

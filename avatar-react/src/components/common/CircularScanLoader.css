@@ -1,0 +1,261 @@
+/* 雷达扫描加载器样式 */
+.radar-scan-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(4, 21, 39, 0.95);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* 星空背景 */
+.scan-starfield {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #eef, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 160px 120px, #ddf, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.3;
+  animation: twinkle 4s infinite linear;
+}
+
+@keyframes twinkle {
+  from { background-position: 0 0; }
+  to { background-position: -200px 200px; }
+}
+
+/* 雷达背景 */
+.radar-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 雷达扫描包装器 - 保留用于兼容性 */
+.radar-scan-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 30px;
+  border-radius: 50%;
+  background-color: rgba(0, 30, 60, 0.5);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+/* 雷达网格 */
+.radar-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+}
+
+/* 雷达同心圆 */
+.radar-circles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.radar-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+}
+
+.circle-1 {
+  width: 20%;
+  height: 20%;
+  animation: pulse 3s infinite alternate;
+}
+
+.circle-2 {
+  width: 40%;
+  height: 40%;
+  animation: pulse 3s infinite alternate 0.5s;
+}
+
+.circle-3 {
+  width: 60%;
+  height: 60%;
+  animation: pulse 3s infinite alternate 1s;
+}
+
+@keyframes pulse {
+  from { box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1); }
+  to { box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.5); }
+}
+
+/* 雷达扫描光束 */
+.radar-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, 
+    rgba(0, 255, 255, 0) 0%, 
+    rgba(0, 255, 255, 0.02) 50%, 
+    rgba(0, 255, 255, 0.1) 100%);
+  transform-origin: center;
+  animation: radarSweep 6s infinite linear;
+  z-index: 2;
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 雷达中心点 */
+.radar-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(0, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  animation: centerPulse 2s infinite alternate;
+  z-index: 3;
+}
+
+@keyframes centerPulse {
+  from { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; }
+  to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+}
+
+/* 雷达数据点 */
+.radar-data-point {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background-color: rgba(0, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+  animation: blip 3s infinite;
+  z-index: 1;
+}
+
+@keyframes blip {
+  0% { transform: scale(0.5); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.5); opacity: 0.3; }
+}
+
+/* 加载信息 */
+.scan-message {
+  text-align: center;
+  color: #0ff;
+  margin-top: 20px;
+  width: 80%;
+  max-width: 400px;
+  font-size: 1.2em;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.scan-title {
+  font-family: 'Orbitron', sans-serif !important;
+  margin-bottom: 10px !important;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  letter-spacing: 2px;
+  color: #0ff;
+  z-index: 10;
+  position: relative;
+}
+
+.scan-subtitle {
+  font-family: 'Orbitron', sans-serif !important;
+  margin-bottom: 30px !important;
+  opacity: 0.8;
+  letter-spacing: 1px;
+  color: #0ff;
+  z-index: 10;
+  position: relative;
+}
+
+/* 装饰性元素 */
+.scan-decoration {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 2px solid rgba(0, 255, 255, 0.5);
+}
+
+.scan-decoration.top-left {
+  top: 20px;
+  left: 20px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.scan-decoration.top-right {
+  top: 20px;
+  right: 20px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.scan-decoration.bottom-left {
+  bottom: 20px;
+  left: 20px;
+  border-right: none;
+  border-top: none;
+}
+
+.scan-decoration.bottom-right {
+  bottom: 20px;
+  right: 20px;
+  border-left: none;
+  border-top: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .radar-scan-wrapper {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .scan-message {
+    width: 90%;
+  }
+}
+
+@media (max-width: 480px) {
+  .radar-scan-wrapper {
+    width: 200px;
+    height: 200px;
+  }
+}

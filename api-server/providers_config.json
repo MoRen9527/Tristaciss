@@ -1,0 +1,78 @@
+{
+  "deepseek": {
+    "enabled": false,
+    "api_key": "",
+    "base_url": "https://api.deepseek.com/v1",
+    "models": [
+      {
+        "id": "deepseek-chat",
+        "name": "DeepSeek Chat"
+      },
+      {
+        "id": "deepseek-coder",
+        "name": "DeepSeek Coder"
+      }
+    ],
+    "selected_model": "deepseek-chat"
+  },
+  "glm": {
+    "enabled": false,
+    "api_key": "",
+    "base_url": "https://open.bigmodel.cn/api/paas/v4",
+    "models": [
+      {
+        "id": "glm-4",
+        "name": "GLM-4"
+      },
+      {
+        "id": "glm-4-flash",
+        "name": "GLM-4 Flash"
+      },
+      {
+        "id": "glm-3-turbo",
+        "name": "GLM-3 Turbo"
+      }
+    ],
+    "selected_model": "glm-4"
+  },
+  "qwen": {
+    "enabled": false,
+    "api_key": "",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "models": [
+      {
+        "id": "qwen-turbo",
+        "name": "Qwen Turbo"
+      },
+      {
+        "id": "qwen-plus",
+        "name": "Qwen Plus"
+      },
+      {
+        "id": "qwen-max",
+        "name": "Qwen Max"
+      }
+    ],
+    "selected_model": "qwen-turbo"
+  },
+  "moonshot": {
+    "enabled": false,
+    "api_key": "",
+    "base_url": "https://api.moonshot.cn/v1",
+    "models": [
+      {
+        "id": "moonshot-v1-8k",
+        "name": "Moonshot v1 8K"
+      },
+      {
+        "id": "moonshot-v1-32k",
+        "name": "Moonshot v1 32K"
+      },
+      {
+        "id": "moonshot-v1-128k",
+        "name": "Moonshot v1 128K"
+      }
+    ],
+    "selected_model": "moonshot-v1-8k"
+  }
+}
