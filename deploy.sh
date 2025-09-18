@@ -48,23 +48,25 @@ install_docker() {
         log_info "安装Docker..."
         
         # 更新系统
-        sudo yum update -y
+        yum update -y
         
         # 安装必要的包
-        sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+        yum install -y yum-utils device-mapper-persistent-data lvm2
         
         # 添加Docker仓库
-        sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
         
         # 安装Docker
-        sudo yum install -y docker-ce docker-ce-cli containerd.io
+        yum install -y docker-ce docker-ce-cli containerd.io
         
         # 启动Docker服务
-        sudo systemctl start docker
-        sudo systemctl enable docker
+        systemctl start docker
+        systemctl enable docker
         
-        # 添加当前用户到docker组
-        sudo usermod -aG docker $USER
+        # 添加当前用户到docker组（root用户不需要）
+        if [ "$USER" != "root" ]; then
+            usermod -aG docker $USER
+        fi
         
         log_info "Docker安装完成"
     fi
@@ -80,13 +82,13 @@ install_docker_compose() {
         log_info "安装Docker Compose..."
         
         # 下载Docker Compose
-        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         
         # 添加执行权限
-        sudo chmod +x /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
         
         # 创建软链接
-        sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+        ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
         
         log_info "Docker Compose安装完成"
     fi
@@ -99,10 +101,10 @@ configure_firewall() {
     # 检查firewalld状态
     if systemctl is-active --quiet firewalld; then
         log_info "配置firewalld规则..."
-        sudo firewall-cmd --permanent --add-port=80/tcp
-        sudo firewall-cmd --permanent --add-port=443/tcp
-        sudo firewall-cmd --permanent --add-port=8008/tcp
-        sudo firewall-cmd --reload
+        firewall-cmd --permanent --add-port=80/tcp
+        firewall-cmd --permanent --add-port=443/tcp
+        firewall-cmd --permanent --add-port=8008/tcp
+        firewall-cmd --reload
     else
         log_warn "firewalld未运行，请手动配置防火墙规则"
     fi

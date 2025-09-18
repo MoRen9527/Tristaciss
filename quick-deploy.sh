@@ -78,12 +78,12 @@ update_system() {
     log_step "更新系统包..."
     
     if command -v yum &> /dev/null; then
-        sudo yum update -y
-        sudo yum install -y curl wget git vim net-tools
+        yum update -y
+        yum install -y curl wget git vim net-tools
     elif command -v apt &> /dev/null; then
-        sudo apt update -y
-        sudo apt upgrade -y
-        sudo apt install -y curl wget git vim net-tools
+        apt update -y
+        apt upgrade -y
+        apt install -y curl wget git vim net-tools
     else
         log_error "不支持的包管理器"
         exit 1
@@ -102,20 +102,20 @@ install_docker() {
     fi
     
     # 卸载旧版本
-    sudo yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
+    yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
     
     # 安装依赖
-    sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+    yum install -y yum-utils device-mapper-persistent-data lvm2
     
     # 添加Docker仓库（使用阿里云镜像）
-    sudo yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
     
     # 安装Docker
-    sudo yum install -y docker-ce docker-ce-cli containerd.io
+    yum install -y docker-ce docker-ce-cli containerd.io
     
     # 配置Docker镜像加速
-    sudo mkdir -p /etc/docker
-    sudo tee /etc/docker/daemon.json <<-'EOF'
+    mkdir -p /etc/docker
+    tee /etc/docker/daemon.json <<-'EOF'
 {
     "registry-mirrors": [
         "https://mirror.ccs.tencentyun.com",
@@ -131,11 +131,13 @@ install_docker() {
 EOF
     
     # 启动Docker
-    sudo systemctl start docker
-    sudo systemctl enable docker
+    systemctl start docker
+    systemctl enable docker
     
-    # 添加用户到docker组
-    sudo usermod -aG docker $USER
+    # 添加用户到docker组（root用户不需要）
+    if [ "$USER" != "root" ]; then
+        usermod -aG docker $USER
+    fi
     
     log_info "Docker安装完成"
 }
@@ -151,13 +153,13 @@ install_docker_compose() {
     
     # 下载Docker Compose（使用国内镜像）
     COMPOSE_VERSION="2.20.2"
-    sudo curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     
     # 添加执行权限
-    sudo chmod +x /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
     
     # 创建软链接
-    sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+    ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     
     log_info "Docker Compose安装完成"
 }
@@ -168,16 +170,16 @@ setup_firewall() {
     
     if systemctl is-active --quiet firewalld; then
         log_info "配置firewalld规则..."
-        sudo firewall-cmd --permanent --add-port=80/tcp
-        sudo firewall-cmd --permanent --add-port=443/tcp
-        sudo firewall-cmd --permanent --add-port=8008/tcp
-        sudo firewall-cmd --reload
+        firewall-cmd --permanent --add-port=80/tcp
+        firewall-cmd --permanent --add-port=443/tcp
+        firewall-cmd --permanent --add-port=8008/tcp
+        firewall-cmd --reload
         log_info "防火墙配置完成"
     elif systemctl is-active --quiet ufw; then
         log_info "配置ufw规则..."
-        sudo ufw allow 80/tcp
-        sudo ufw allow 443/tcp
-        sudo ufw allow 8008/tcp
+        ufw allow 80/tcp
+        ufw allow 443/tcp
+        ufw allow 8008/tcp
         log_info "防火墙配置完成"
     else
         log_warn "未检测到防火墙服务，请手动开放端口 80, 443, 8008"
@@ -191,7 +193,7 @@ setup_project() {
     PROJECT_DIR="/opt/tristaciss"
     
     # 确保/opt目录存在且有权限
-    sudo mkdir -p /opt
+    mkdir -p /opt
     
     log_info "项目将部署到: $PROJECT_DIR"
 }
@@ -213,15 +215,17 @@ download_project() {
         # 如果目录已存在，先备份
         if [[ -d "tristaciss" ]]; then
             log_warn "目录已存在，创建备份..."
-            sudo mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
+            mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
         fi
         
         # 克隆项目
         git clone $REPO_URL tristaciss
         cd tristaciss
         
-        # 设置目录权限
-        sudo chown -R $USER:$USER /opt/tristaciss
+        # 设置目录权限（root用户不需要chown）
+        if [ "$USER" != "root" ]; then
+            chown -R $USER:$USER /opt/tristaciss
+        fi
         
         log_info "项目代码下载完成"
     fi

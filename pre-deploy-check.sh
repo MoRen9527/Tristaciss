@@ -222,7 +222,7 @@ check_basic_environment() {
         log_info "curl已安装"
     else
         log_error "curl未安装 (必需工具)"
-        echo "  安装命令: sudo apt update && sudo apt install -y curl"
+        echo "  安装命令: yum install -y curl (阿里云Linux) 或 apt install -y curl (Ubuntu)"
         env_ok=false
     fi
     
@@ -231,14 +231,20 @@ check_basic_environment() {
         log_info "wget已安装"
     else
         log_warn "wget未安装 (建议安装)"
-        echo "  安装命令: sudo apt update && sudo apt install -y wget"
+        echo "  安装命令: yum install -y wget (阿里云Linux) 或 apt install -y wget (Ubuntu)"
     fi
     
-    # 检查sudo权限
-    if sudo -n true 2>/dev/null; then
-        log_info "sudo权限正常"
+    # 检查用户权限
+    if [ "$EUID" -eq 0 ]; then
+        log_info "当前为root用户，权限充足"
     else
-        log_warn "当前用户可能没有sudo权限，部署时需要管理员权限"
+        log_warn "当前为普通用户，部署时可能需要管理员权限"
+        # 检查sudo权限（仅Ubuntu/Debian系统）
+        if command -v sudo &> /dev/null && sudo -n true 2>/dev/null; then
+            log_info "sudo权限正常"
+        else
+            log_warn "无sudo权限或系统不支持sudo命令"
+        fi
     fi
     
     return $([ "$env_ok" = true ] && echo 0 || echo 1)
