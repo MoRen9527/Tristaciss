@@ -211,6 +211,104 @@ check_system_resources() {
     fi
 }
 
+# 检查基础环境
+check_basic_environment() {
+    log_check "检查基础环境..."
+    
+    local env_ok=true
+    
+    # 检查curl (必需，用于下载部署脚本)
+    if command -v curl &> /dev/null; then
+        log_info "curl已安装"
+    else
+        log_error "curl未安装 (必需工具)"
+        echo "  安装命令: sudo apt update && sudo apt install -y curl"
+        env_ok=false
+    fi
+    
+    # 检查wget (备用下载工具)
+    if command -v wget &> /dev/null; then
+        log_info "wget已安装"
+    else
+        log_warn "wget未安装 (建议安装)"
+        echo "  安装命令: sudo apt update && sudo apt install -y wget"
+    fi
+    
+    # 检查sudo权限
+    if sudo -n true 2>/dev/null; then
+        log_info "sudo权限正常"
+    else
+        log_warn "当前用户可能没有sudo权限，部署时需要管理员权限"
+    fi
+    
+    return $([ "$env_ok" = true ] && echo 0 || echo 1)
+}
+
+# 检查可选服务状态 (仅提示，不影响部署)
+check_optional_services() {
+    log_check "检查可选服务状态 (仅供参考)..."
+    
+    echo -e "${YELLOW}注意: 以下服务检查仅供参考，quick-deploy.sh会自动安装所需服务${NC}"
+    echo
+    
+    # 检查Docker (可选检查)
+    if command -v docker &> /dev/null; then
+        log_info "Docker已安装: $(docker --version)"
+        
+        # 检查Docker服务状态
+        if systemctl is-active --quiet docker 2>/dev/null; then
+            log_info "Docker服务运行正常"
+        else
+            log_warn "Docker服务未运行 (部署脚本会自动启动)"
+        fi
+        
+        # 检查Docker权限
+        if docker ps &> /dev/null 2>&1; then
+            log_info "Docker权限正常"
+        else
+            log_warn "当前用户可能没有Docker权限 (部署脚本会自动配置)"
+        fi
+    else
+        log_warn "Docker未安装 (部署脚本会自动安装)"
+    fi
+    
+    # 检查Docker Compose (可选检查)
+    if command -v docker-compose &> /dev/null; then
+        log_info "Docker Compose已安装: $(docker-compose --version)"
+    elif docker compose version &> /dev/null 2>&1; then
+        log_info "Docker Compose (plugin)已安装: $(docker compose version)"
+    else
+        log_warn "Docker Compose未安装 (部署脚本会自动安装)"
+    fi
+    
+    # 检查Git (可选)
+    if command -v git &> /dev/null; then
+        log_info "Git已安装: $(git --version)"
+    else
+        log_warn "Git未安装 (部署脚本会自动安装)"
+    fi
+    
+    # 检查防火墙状态
+    if command -v ufw &> /dev/null; then
+        local ufw_status=$(ufw status | head -1)
+        log_info "防火墙状态: $ufw_status"
+        
+        if ufw status | grep -q "80/tcp"; then
+            log_info "端口80已开放"
+        else
+            log_warn "端口80未开放 (部署脚本会自动配置)"
+        fi
+        
+        if ufw status | grep -q "443/tcp"; then
+            log_info "端口443已开放"
+        else
+            log_warn "端口443未开放 (部署脚本会自动配置)"
+        fi
+    else
+        log_info "未检测到ufw防火墙 (部署脚本会自动配置)"
+    fi
+}
+
 # 检查网络连接
 check_network() {
     log_check "检查网络连接..."
@@ -228,6 +326,13 @@ check_network() {
     else
         log_warn "Docker Hub连接可能有问题，建议使用国内镜像"
     fi
+    
+    # 检查GitHub连接 (用于拉取代码)
+    if curl -s --connect-timeout 5 https://github.com &> /dev/null; then
+        log_info "GitHub连接正常"
+    else
+        log_warn "GitHub连接可能有问题"
+    fi
 }
 
 # 生成部署报告
@@ -236,7 +341,7 @@ generate_report() {
     local report_file="pre-deploy-report-$(date +%Y%m%d_%H%M%S).txt"
     
     {
-        echo "AI学习项目部署前检查报告"
+        echo "三元星球城市空间站项目部署前检查报告"
         echo "生成时间: $timestamp"
         echo "========================================"
         echo
@@ -280,6 +385,9 @@ main() {
     local check_passed=true
     
     # 执行各项检查
+    check_basic_environment || check_passed=false
+    echo
+    
     check_project_structure || check_passed=false
     echo
     
@@ -298,6 +406,9 @@ main() {
     check_network
     echo
     
+    check_optional_services
+    echo
+    
     # 生成报告
     generate_report
     echo
@@ -307,8 +418,11 @@ main() {
         log_info "🎉 所有检查项通过，可以开始部署！"
         echo
         echo -e "${GREEN}建议的部署命令：${NC}"
-        echo "  chmod +x deploy.sh"
-        echo "  ./deploy.sh"
+        echo "  # 本地部署 (如果已有完整项目文件)"
+        echo "  chmod +x deploy.sh && ./deploy.sh"
+        echo
+        echo "  # 或使用快速部署 (自动安装所有依赖)"
+        echo "  curl -fsSL https://raw.githubusercontent.com/MoRen9527/Tristaciss/main/quick-deploy.sh | bash"
     else
         log_error "❌ 部分检查项未通过，请修复后再部署"
         echo

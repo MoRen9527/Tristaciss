@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AI学习项目自动部署脚本
+# 三元星球城市空间站项目自动部署脚本
 # 适用于 Alibaba Cloud Linux 3.2104 LTS
 
 set -e
@@ -201,7 +201,7 @@ show_deployment_info() {
 
 # 主函数
 main() {
-    log_info "AI学习项目自动部署脚本 v1.0"
+    log_info "三元星球城市空间站项目自动部署脚本 v1.0"
     echo
     
     check_root

@@ -32,8 +32,8 @@ async def test_model(session, api_key, model_name):
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://ai-learning-platform.com",
-        "X-Title": "AI Learning Platform - Model Test"
+        "HTTP-Referer": "https://tristaciss-platform.com",
+        "X-Title": "Tristaciss Platform - Model Test"
     }
     
     payload = {

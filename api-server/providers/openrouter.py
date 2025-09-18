@@ -92,8 +92,8 @@ class OpenRouterProvider(BaseModelProvider):
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://ai-learning-prod.com",
-            "X-Title": "AI Learning Prod"
+            "HTTP-Referer": "https://tristaciss-prod.com",
+            "X-Title": "Tristaciss Prod"
         }
         
         # 添加额外的请求头

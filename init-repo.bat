@@ -6,7 +6,7 @@ setlocal enabledelayedexpansion
 :: 使用方法: init-repo.bat [your-github-username]
 
 set "PROJECT_NAME=Tristaciss"
-set "REPO_DESCRIPTION=三元星球城市空间站 - AI应用生产制造平台"
+set "REPO_DESCRIPTION=三元宇宙-星球城市空间站 - AI应用生产制造平台"
 
 if "%1"=="" (
     for /f "tokens=*" %%i in ('git config user.name 2^>nul') do set "GITHUB_USERNAME=%%i"
@@ -165,12 +165,12 @@ echo ## 🐳 Docker部署
 echo.
 echo ```bash
 echo # 安全部署（推荐^）
-echo ./deploy-safe.sh
+echo .\deploy-safe.sh
 echo.
 echo # 或使用Git克隆部署
-echo git clone https://github.com/!GITHUB_USERNAME!/%PROJECT_NAME%.git
-echo cd %PROJECT_NAME%
-echo ./deploy.sh
+echo git clone https://github.com/!GITHUB_USERNAME!/!PROJECT_NAME!.git
+echo cd !PROJECT_NAME!
+echo .\deploy.sh
 echo ```
 echo.
 echo ## 📚 文档
@@ -308,9 +308,9 @@ echo   📁 本地路径: %CD%
 echo   🚀 部署脚本: deploy-safe.sh
 echo.
 echo 📚 下一步操作:
-echo   1. 检查仓库: https://github.com/!GITHUB_USERNAME!/%PROJECT_NAME%
+echo   1. 检查仓库: https://github.com/!GITHUB_USERNAME!/!PROJECT_NAME!
 echo   2. 配置部署: 编辑deploy-safe.sh中的服务器信息
-echo   3. 开始部署: ./deploy-safe.sh
+echo   3. 开始部署: .\deploy-safe.sh
 echo.
 echo ✨ 祝您开发愉快！
 pause

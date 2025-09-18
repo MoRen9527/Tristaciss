@@ -1,4 +1,4 @@
-# 🌟 Tristaciss - 三元星球城市空间站
+# 🌟 Tristaciss - 三元宇宙-星球城市空间站
 
 AI应用生产制造平台 - 基于FastAPI + React的前后端分离架构
 

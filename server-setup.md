@@ -9,10 +9,10 @@
 ssh root@47.245.122.61
 
 # 2. 下载并执行一键部署脚本
-curl -fsSL https://raw.githubusercontent.com/your-repo/main/quick-deploy.sh | bash
+curl -fsSL https://raw.githubusercontent.com/MoRen9527/Tristaciss/main/quick-deploy.sh | bash
 
 # 或者手动执行
-wget https://raw.githubusercontent.com/your-repo/main/quick-deploy.sh
+wget https://raw.githubusercontent.com/MoRen9527/Tristaciss/main/quick-deploy.sh
 chmod +x quick-deploy.sh
 ./quick-deploy.sh
 ```
@@ -29,7 +29,7 @@ cd /opt/tristaciss
 
 # 3. 上传项目代码（推荐使用Git或rsync）
 # 方式A：Git克隆（推荐）
-git clone https://github.com/your-username/Tristaciss.git .
+git clone https://github.com/Tristaciss/Tristaciss.git .
 
 # 方式B：使用rsync排除垃圾文件
 # 在本地执行：

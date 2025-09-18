@@ -105,7 +105,7 @@ check_network() {
 # 主菜单
 show_menu() {
     echo
-    echo -e "${BLUE}=== AI学习项目监控面板 ===${NC}"
+    echo -e "${BLUE}=== 三元星球城市空间站项目监控面板 ===${NC}"
     echo "1. 服务状态检查"
     echo "2. 资源使用情况"
     echo "3. 查看日志"

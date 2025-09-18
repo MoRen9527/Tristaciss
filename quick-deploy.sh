@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# AI学习项目快速部署脚本 - 适用于阿里云服务器
-# 使用方法: curl -fsSL https://raw.githubusercontent.com/your-repo/main/quick-deploy.sh | bash
+# Tristaciss - 快速部署脚本 - 适用于阿里云服务器
+# 使用方法: curl -fsSL https://raw.githubusercontent.com/MoRen9527/Tristaciss/main/quick-deploy.sh | bash
 
 set -e
 
@@ -34,7 +34,7 @@ show_welcome() {
     clear
     echo -e "${BLUE}"
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                    AI学习项目自动部署                          ║"
+    echo "║                    Tristaciss 自动部署                          ║"
     echo "║                                                              ║"
     echo "║  🚀 一键部署 React + FastAPI 项目到阿里云服务器                ║"
     echo "║  📦 Docker容器化 + Nginx反向代理                              ║"
@@ -188,35 +188,42 @@ setup_firewall() {
 setup_project() {
     log_step "设置项目目录..."
     
-    PROJECT_DIR="/opt/ai-learning"
+    PROJECT_DIR="/opt/tristaciss"
     
-    # 创建项目目录
-    sudo mkdir -p $PROJECT_DIR
-    sudo chown $USER:$USER $PROJECT_DIR
-    cd $PROJECT_DIR
+    # 确保/opt目录存在且有权限
+    sudo mkdir -p /opt
     
-    # 创建必要的子目录
-    mkdir -p logs data backups
-    
-    log_info "项目目录创建完成: $PROJECT_DIR"
+    log_info "项目将部署到: $PROJECT_DIR"
 }
 
 # 下载项目文件
 download_project() {
-    log_step "下载项目配置文件..."
+    log_step "下载项目代码..."
     
-    # 这里您需要替换为实际的项目仓库地址
-    # 如果没有Git仓库，可以手动创建配置文件
+    # 从GitHub克隆项目
+    REPO_URL="https://github.com/MoRen9527/Tristaciss.git"
     
-    log_warn "请手动上传项目代码到当前目录"
-    log_info "或者使用以下命令："
-    echo "  scp -r /path/to/your/project/* $USER@$(hostname -I | awk '{print $1}'):$(pwd)/"
-    
-    read -p "项目代码已上传完成？(y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "请先上传项目代码"
-        exit 1
+    if [[ -d ".git" ]]; then
+        log_info "检测到Git仓库，更新代码..."
+        git pull origin main
+    else
+        log_info "从GitHub克隆项目: $REPO_URL"
+        cd /opt
+        
+        # 如果目录已存在，先备份
+        if [[ -d "tristaciss" ]]; then
+            log_warn "目录已存在，创建备份..."
+            sudo mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
+        fi
+        
+        # 克隆项目
+        git clone $REPO_URL tristaciss
+        cd tristaciss
+        
+        # 设置目录权限
+        sudo chown -R $USER:$USER /opt/tristaciss
+        
+        log_info "项目代码下载完成"
     fi
 }
 

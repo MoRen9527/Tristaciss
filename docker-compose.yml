@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: ai-learning-backend
+    container_name: tristaciss-backend
     restart: unless-stopped
     environment:
       - PYTHONPATH=/app
@@ -16,7 +16,7 @@ services:
       - backend_data:/app/cache
       - backend_logs:/app/logs
     networks:
-      - ai-learning-network
+      - tristaciss-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
       interval: 30s
@@ -28,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    container_name: ai-learning-frontend
+    container_name: tristaciss-frontend
     restart: unless-stopped
     ports:
       - "80:80"
@@ -36,7 +36,7 @@ services:
     depends_on:
       - backend
     networks:
-      - ai-learning-network
+      - tristaciss-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
@@ -44,7 +44,7 @@ services:
       retries: 3
 
 networks:
-  ai-learning-network:
+  tristaciss-network:
     driver: bridge
 
 volumes:
