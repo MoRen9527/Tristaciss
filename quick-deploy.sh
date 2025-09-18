@@ -78,12 +78,12 @@ update_system() {
     log_step "更新系统包..."
     
     if command -v yum &> /dev/null; then
-        yum update -y
-        yum install -y curl wget git vim net-tools
+        ${SUDO_CMD} yum update -y
+        ${SUDO_CMD} yum install -y curl wget git vim net-tools
     elif command -v apt &> /dev/null; then
-        apt update -y
-        apt upgrade -y
-        apt install -y curl wget git vim net-tools
+        ${SUDO_CMD} apt update -y
+        ${SUDO_CMD} apt upgrade -y
+        ${SUDO_CMD} apt install -y curl wget git vim net-tools
     else
         log_error "不支持的包管理器"
         exit 1
@@ -102,20 +102,20 @@ install_docker() {
     fi
     
     # 卸载旧版本
-    yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
+    ${SUDO_CMD} yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
     
     # 安装依赖
-    yum install -y yum-utils device-mapper-persistent-data lvm2
+    ${SUDO_CMD} yum install -y yum-utils device-mapper-persistent-data lvm2
     
     # 添加Docker仓库（使用阿里云镜像）
-    yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    ${SUDO_CMD} yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
     
     # 安装Docker
-    yum install -y docker-ce docker-ce-cli containerd.io
+    ${SUDO_CMD} yum install -y docker-ce docker-ce-cli containerd.io
     
     # 配置Docker镜像加速
-    mkdir -p /etc/docker
-    tee /etc/docker/daemon.json <<-'EOF'
+    ${SUDO_CMD} mkdir -p /etc/docker
+    ${SUDO_CMD} tee /etc/docker/daemon.json <<-'EOF'
 {
     "registry-mirrors": [
         "https://mirror.ccs.tencentyun.com",
@@ -131,12 +131,13 @@ install_docker() {
 EOF
     
     # 启动Docker
-    systemctl start docker
-    systemctl enable docker
+    ${SUDO_CMD} systemctl start docker
+    ${SUDO_CMD} systemctl enable docker
     
-    # 添加用户到docker组（root用户不需要）
+    # 添加用户到docker组
     if [ "$USER" != "root" ]; then
-        usermod -aG docker $USER
+        ${SUDO_CMD} usermod -aG docker $USER
+        log_info "已将用户 $USER 添加到docker组，请重新登录以生效"
     fi
     
     log_info "Docker安装完成"
@@ -153,13 +154,13 @@ install_docker_compose() {
     
     # 下载Docker Compose（使用国内镜像）
     COMPOSE_VERSION="2.20.2"
-    curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    ${SUDO_CMD} curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     
     # 添加执行权限
-    chmod +x /usr/local/bin/docker-compose
+    ${SUDO_CMD} chmod +x /usr/local/bin/docker-compose
     
     # 创建软链接
-    ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+    ${SUDO_CMD} ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     
     log_info "Docker Compose安装完成"
 }
@@ -170,16 +171,16 @@ setup_firewall() {
     
     if systemctl is-active --quiet firewalld; then
         log_info "配置firewalld规则..."
-        firewall-cmd --permanent --add-port=80/tcp
-        firewall-cmd --permanent --add-port=443/tcp
-        firewall-cmd --permanent --add-port=8008/tcp
-        firewall-cmd --reload
+        ${SUDO_CMD} firewall-cmd --permanent --add-port=80/tcp
+        ${SUDO_CMD} firewall-cmd --permanent --add-port=443/tcp
+        ${SUDO_CMD} firewall-cmd --permanent --add-port=8008/tcp
+        ${SUDO_CMD} firewall-cmd --reload
         log_info "防火墙配置完成"
     elif systemctl is-active --quiet ufw; then
         log_info "配置ufw规则..."
-        ufw allow 80/tcp
-        ufw allow 443/tcp
-        ufw allow 8008/tcp
+        ${SUDO_CMD} ufw allow 80/tcp
+        ${SUDO_CMD} ufw allow 443/tcp
+        ${SUDO_CMD} ufw allow 8008/tcp
         log_info "防火墙配置完成"
     else
         log_warn "未检测到防火墙服务，请手动开放端口 80, 443, 8008"
@@ -193,7 +194,7 @@ setup_project() {
     PROJECT_DIR="/opt/tristaciss"
     
     # 确保/opt目录存在且有权限
-    mkdir -p /opt
+    ${SUDO_CMD} mkdir -p /opt
     
     log_info "项目将部署到: $PROJECT_DIR"
 }
@@ -215,16 +216,16 @@ download_project() {
         # 如果目录已存在，先备份
         if [[ -d "tristaciss" ]]; then
             log_warn "目录已存在，创建备份..."
-            mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
+            ${SUDO_CMD} mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
         fi
         
         # 克隆项目
         git clone $REPO_URL tristaciss
         cd tristaciss
         
-        # 设置目录权限（root用户不需要chown）
+        # 设置目录权限
         if [ "$USER" != "root" ]; then
-            chown -R $USER:$USER /opt/tristaciss
+            ${SUDO_CMD} chown -R $USER:$USER /opt/tristaciss
         fi
         
         log_info "项目代码下载完成"
@@ -361,12 +362,27 @@ EOF
 main() {
     show_welcome
     
-    # 检查是否为root用户
+    # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
         log_warn "检测到root用户，建议使用普通用户运行"
-        read -p "是否继续？(y/N): " -n 1 -r
+        SUDO_CMD=""
+        read -p "是否继续使用root用户？(y/N): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    else
+        log_info "当前用户: $USER"
+        # 检查sudo权限
+        if sudo -n true 2>/dev/null; then
+            log_info "sudo权限正常"
+            SUDO_CMD="sudo"
+        else
+            log_error "当前用户没有sudo权限，请确保用户已加入wheel组"
+            echo "解决方法："
+            echo "1. 切换到root用户: su -"
+            echo "2. 将用户加入wheel组: usermod -aG wheel $USER"
+            echo "3. 重新登录用户"
             exit 1
         fi
     fi
