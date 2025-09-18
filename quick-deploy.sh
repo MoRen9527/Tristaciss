@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# AI学习项目快速部署脚本 - 适用于阿里云服务器
-# 使用方法: curl -fsSL https://raw.githubusercontent.com/your-repo/main/quick-deploy.sh | bash
+# Tristaciss - 快速部署脚本 - 适用于阿里云服务器
+# 使用方法: curl -fsSL https://raw.githubusercontent.com/MoRen9527/Tristaciss/main/quick-deploy.sh | bash
 
 set -e
 
@@ -34,7 +34,7 @@ show_welcome() {
     clear
     echo -e "${BLUE}"
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                    AI学习项目自动部署                          ║"
+    echo "║                    Tristaciss 自动部署                          ║"
     echo "║                                                              ║"
     echo "║  🚀 一键部署 React + FastAPI 项目到阿里云服务器                ║"
     echo "║  📦 Docker容器化 + Nginx反向代理                              ║"
@@ -78,12 +78,12 @@ update_system() {
     log_step "更新系统包..."
     
     if command -v yum &> /dev/null; then
-        sudo yum update -y
-        sudo yum install -y curl wget git vim net-tools
+        ${SUDO_CMD} yum update -y
+        ${SUDO_CMD} yum install -y curl wget git vim net-tools
     elif command -v apt &> /dev/null; then
-        sudo apt update -y
-        sudo apt upgrade -y
-        sudo apt install -y curl wget git vim net-tools
+        ${SUDO_CMD} apt update -y
+        ${SUDO_CMD} apt upgrade -y
+        ${SUDO_CMD} apt install -y curl wget git vim net-tools
     else
         log_error "不支持的包管理器"
         exit 1
@@ -102,20 +102,20 @@ install_docker() {
     fi
     
     # 卸载旧版本
-    sudo yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
+    ${SUDO_CMD} yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
     
     # 安装依赖
-    sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+    ${SUDO_CMD} yum install -y yum-utils device-mapper-persistent-data lvm2
     
     # 添加Docker仓库（使用阿里云镜像）
-    sudo yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    ${SUDO_CMD} yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
     
     # 安装Docker
-    sudo yum install -y docker-ce docker-ce-cli containerd.io
+    ${SUDO_CMD} yum install -y docker-ce docker-ce-cli containerd.io
     
     # 配置Docker镜像加速
-    sudo mkdir -p /etc/docker
-    sudo tee /etc/docker/daemon.json <<-'EOF'
+    ${SUDO_CMD} mkdir -p /etc/docker
+    ${SUDO_CMD} tee /etc/docker/daemon.json <<-'EOF'
 {
     "registry-mirrors": [
         "https://mirror.ccs.tencentyun.com",
@@ -131,11 +131,14 @@ install_docker() {
 EOF
     
     # 启动Docker
-    sudo systemctl start docker
-    sudo systemctl enable docker
+    ${SUDO_CMD} systemctl start docker
+    ${SUDO_CMD} systemctl enable docker
     
     # 添加用户到docker组
-    sudo usermod -aG docker $USER
+    if [ "$USER" != "root" ]; then
+        ${SUDO_CMD} usermod -aG docker $USER
+        log_info "已将用户 $USER 添加到docker组，请重新登录以生效"
+    fi
     
     log_info "Docker安装完成"
 }
@@ -151,13 +154,13 @@ install_docker_compose() {
     
     # 下载Docker Compose（使用国内镜像）
     COMPOSE_VERSION="2.20.2"
-    sudo curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    ${SUDO_CMD} curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     
     # 添加执行权限
-    sudo chmod +x /usr/local/bin/docker-compose
+    ${SUDO_CMD} chmod +x /usr/local/bin/docker-compose
     
     # 创建软链接
-    sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+    ${SUDO_CMD} ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     
     log_info "Docker Compose安装完成"
 }
@@ -168,16 +171,16 @@ setup_firewall() {
     
     if systemctl is-active --quiet firewalld; then
         log_info "配置firewalld规则..."
-        sudo firewall-cmd --permanent --add-port=80/tcp
-        sudo firewall-cmd --permanent --add-port=443/tcp
-        sudo firewall-cmd --permanent --add-port=8008/tcp
-        sudo firewall-cmd --reload
+        ${SUDO_CMD} firewall-cmd --permanent --add-port=80/tcp
+        ${SUDO_CMD} firewall-cmd --permanent --add-port=443/tcp
+        ${SUDO_CMD} firewall-cmd --permanent --add-port=8008/tcp
+        ${SUDO_CMD} firewall-cmd --reload
         log_info "防火墙配置完成"
     elif systemctl is-active --quiet ufw; then
         log_info "配置ufw规则..."
-        sudo ufw allow 80/tcp
-        sudo ufw allow 443/tcp
-        sudo ufw allow 8008/tcp
+        ${SUDO_CMD} ufw allow 80/tcp
+        ${SUDO_CMD} ufw allow 443/tcp
+        ${SUDO_CMD} ufw allow 8008/tcp
         log_info "防火墙配置完成"
     else
         log_warn "未检测到防火墙服务，请手动开放端口 80, 443, 8008"
@@ -188,35 +191,44 @@ setup_firewall() {
 setup_project() {
     log_step "设置项目目录..."
     
-    PROJECT_DIR="/opt/ai-learning"
+    PROJECT_DIR="/opt/tristaciss"
     
-    # 创建项目目录
-    sudo mkdir -p $PROJECT_DIR
-    sudo chown $USER:$USER $PROJECT_DIR
-    cd $PROJECT_DIR
+    # 确保/opt目录存在且有权限
+    ${SUDO_CMD} mkdir -p /opt
     
-    # 创建必要的子目录
-    mkdir -p logs data backups
-    
-    log_info "项目目录创建完成: $PROJECT_DIR"
+    log_info "项目将部署到: $PROJECT_DIR"
 }
 
 # 下载项目文件
 download_project() {
-    log_step "下载项目配置文件..."
+    log_step "下载项目代码..."
     
-    # 这里您需要替换为实际的项目仓库地址
-    # 如果没有Git仓库，可以手动创建配置文件
+    # 从GitHub克隆项目
+    REPO_URL="https://github.com/MoRen9527/Tristaciss.git"
     
-    log_warn "请手动上传项目代码到当前目录"
-    log_info "或者使用以下命令："
-    echo "  scp -r /path/to/your/project/* $USER@$(hostname -I | awk '{print $1}'):$(pwd)/"
-    
-    read -p "项目代码已上传完成？(y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "请先上传项目代码"
-        exit 1
+    if [[ -d ".git" ]]; then
+        log_info "检测到Git仓库，更新代码..."
+        git pull origin main
+    else
+        log_info "从GitHub克隆项目: $REPO_URL"
+        cd /opt
+        
+        # 如果目录已存在，先备份
+        if [[ -d "tristaciss" ]]; then
+            log_warn "目录已存在，创建备份..."
+            ${SUDO_CMD} mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
+        fi
+        
+        # 克隆项目
+        git clone $REPO_URL tristaciss
+        cd tristaciss
+        
+        # 设置目录权限
+        if [ "$USER" != "root" ]; then
+            ${SUDO_CMD} chown -R $USER:$USER /opt/tristaciss
+        fi
+        
+        log_info "项目代码下载完成"
     fi
 }
 
@@ -350,12 +362,27 @@ EOF
 main() {
     show_welcome
     
-    # 检查是否为root用户
+    # 检查用户权限
     if [[ $EUID -eq 0 ]]; then
         log_warn "检测到root用户，建议使用普通用户运行"
-        read -p "是否继续？(y/N): " -n 1 -r
+        SUDO_CMD=""
+        read -p "是否继续使用root用户？(y/N): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    else
+        log_info "当前用户: $USER"
+        # 检查sudo权限
+        if sudo -n true 2>/dev/null; then
+            log_info "sudo权限正常"
+            SUDO_CMD="sudo"
+        else
+            log_error "当前用户没有sudo权限，请确保用户已加入wheel组"
+            echo "解决方法："
+            echo "1. 切换到root用户: su -"
+            echo "2. 将用户加入wheel组: usermod -aG wheel $USER"
+            echo "3. 重新登录用户"
             exit 1
         fi
     fi
