@@ -596,6 +596,15 @@ async def chat_message(request: dict):
         logger.error(f"聊天消息处理失败: {e}")
         return {"error": f"聊天消息处理失败: {str(e)}"}
 
+@app.get("/api/health")
+async def api_health_check():
+    """API健康检查端点"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
 # CORS中间件配置
 app.add_middleware(
     CORSMiddleware,
