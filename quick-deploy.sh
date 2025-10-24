@@ -279,6 +279,7 @@ download_project() {
     
     # 从GitHub克隆项目
     REPO_URL="https://github.com/MoRen9527/Tristaciss.git"
+<<<<<<< HEAD
     PROJECT_DIR="/opt/tristaciss"
     
     if [[ -d "$PROJECT_DIR/.git" ]]; then
@@ -310,6 +311,31 @@ download_project() {
         fi
         
         cd $PROJECT_DIR
+=======
+    
+    if [[ -d ".git" ]]; then
+        log_info "检测到Git仓库，更新代码..."
+        git pull origin main
+    else
+        log_info "从GitHub克隆项目: $REPO_URL"
+        cd /opt
+        
+        # 如果目录已存在，先备份
+        if [[ -d "tristaciss" ]]; then
+            log_warn "目录已存在，创建备份..."
+            ${SUDO_CMD} mv tristaciss tristaciss.backup.$(date +%Y%m%d_%H%M%S)
+        fi
+        
+        # 克隆项目
+        git clone $REPO_URL tristaciss
+        cd tristaciss
+        
+        # 设置目录权限
+        if [ "$USER" != "root" ]; then
+            ${SUDO_CMD} chown -R $USER:$USER /opt/tristaciss
+        fi
+        
+>>>>>>> f678fd0b3612d6e189128bcb6e2b3433fdc32e09
         log_info "项目代码下载完成"
     fi
 }
