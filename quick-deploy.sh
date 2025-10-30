@@ -5,12 +5,19 @@
 
 set -e
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# 颜色定义（使用 tput，自动适配终端类型，兼容性更好）：
+# RED    ：红色文本（setaf 1）
+# GREEN  ：绿色文本（setaf 2）
+# YELLOW ：黄色文本（setaf 3）
+# BLUE   ：蓝色文本（setaf 4）
+# NC     ：重置终端颜色（sgr0）
+# 用法示例：echo -e "${RED}这是红色${NC}"
+# tput 会根据 $TERM 环境变量自动选择合适的控制码，适用于大多数终端和远程环境。
+RED="$(tput setaf 1)"      # 红色
+GREEN="$(tput setaf 2)"    # 绿色
+YELLOW="$(tput setaf 3)"   # 黄色
+BLUE="$(tput setaf 4)"     # 蓝色
+NC="$(tput sgr0)"          # 终端重置（No Color）
 
 # 日志函数
 log_info() {
@@ -58,13 +65,13 @@ check_system() {
     fi
     
     # 检查网络连接
-    if ping -c 1 google.com &> /dev/null; then
+    if ping -c 1 8.8.8.8 &> /dev/null; then
         log_info "网络连接正常"
     else
         log_warn "网络连接可能有问题，将使用国内镜像源"
     fi
     
-    # 检查磁盘空间
+    # 检查磁盘空间，awk取出第二行第五个字段（使用率），去掉百分号
     DISK_USAGE=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
     if [[ $DISK_USAGE -gt 80 ]]; then
         log_warn "磁盘使用率较高: ${DISK_USAGE}%"
@@ -79,11 +86,11 @@ update_system() {
     
     if command -v yum &> /dev/null; then
         ${SUDO_CMD} yum update -y
-        ${SUDO_CMD} yum install -y curl wget git vim net-tools
+        ${SUDO_CMD} yum install -y curl wget git vim net-tools python3-pip
     elif command -v apt &> /dev/null; then
         ${SUDO_CMD} apt update -y
         ${SUDO_CMD} apt upgrade -y
-        ${SUDO_CMD} apt install -y curl wget git vim net-tools
+        ${SUDO_CMD} apt install -y curl wget git vim net-tools python3-pip
     else
         log_error "不支持的包管理器"
         exit 1
@@ -111,7 +118,11 @@ install_docker() {
     ${SUDO_CMD} yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
     
     # 安装Docker
+<<<<<<< HEAD
     ${SUDO_CMD} yum install -y docker-ce docker-ce-cli containerd.io
+=======
+    ${SUDO_CMD} yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+>>>>>>> c9dcf42291171571c9f7a57efc01cb004839209e
     
     # 配置Docker镜像加速
     ${SUDO_CMD} mkdir -p /etc/docker
@@ -152,8 +163,22 @@ install_docker_compose() {
         return
     fi
     
-    # 下载Docker Compose（使用国内镜像）
+    # 检查是否有Docker Compose插件
+    if docker compose version &> /dev/null 2>&1; then
+        log_info "Docker Compose插件已安装: $(docker compose version)"
+        # 创建docker-compose命令别名
+        ${SUDO_CMD} tee /usr/local/bin/docker-compose <<-'EOF'
+#!/bin/bash
+docker compose "$@"
+EOF
+        ${SUDO_CMD} chmod +x /usr/local/bin/docker-compose
+        log_info "Docker Compose别名创建完成"
+        return
+    fi
+    
+    # 手动下载Docker Compose（多个备用源）
     COMPOSE_VERSION="2.20.2"
+<<<<<<< HEAD
     ${SUDO_CMD} curl -L "https://get.daocloud.io/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     
     # 添加执行权限
@@ -161,8 +186,67 @@ install_docker_compose() {
     
     # 创建软链接
     ${SUDO_CMD} ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+=======
+    ARCH=$(uname -m)
+    OS=$(uname -s)
     
-    log_info "Docker Compose安装完成"
+    log_info "手动下载Docker Compose v${COMPOSE_VERSION}..."
+    
+    # 备用下载源列表
+    DOWNLOAD_URLS=(
+        "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-${OS}-${ARCH}"
+        "https://mirror.ghproxy.com/https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-${OS}-${ARCH}"
+        "https://ghproxy.net/https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-${OS}-${ARCH}"
+    )
+>>>>>>> c9dcf42291171571c9f7a57efc01cb004839209e
+    
+    # 尝试从不同源下载
+    DOWNLOAD_SUCCESS=false
+    for url in "${DOWNLOAD_URLS[@]}"; do
+        log_info "尝试从 $(echo $url | cut -d'/' -f3) 下载..."
+        if ${SUDO_CMD} curl -L --connect-timeout 10 --max-time 300 "$url" -o /usr/local/bin/docker-compose 2>/dev/null; then
+            if [[ -f /usr/local/bin/docker-compose ]] && [[ -s /usr/local/bin/docker-compose ]]; then
+                log_info "下载成功"
+                DOWNLOAD_SUCCESS=true
+                break
+            fi
+        fi
+        log_warn "下载失败，尝试下一个源..."
+    done
+    
+    # 如果下载失败，尝试使用pip安装
+    if [[ "$DOWNLOAD_SUCCESS" != "true" ]]; then
+        log_warn "直接下载失败，尝试使用pip安装..."
+        if command -v pip3 &> /dev/null; then
+            ${SUDO_CMD} pip3 install docker-compose
+            log_info "使用pip3安装Docker Compose完成"
+        elif command -v pip &> /dev/null; then
+            ${SUDO_CMD} pip install docker-compose
+            log_info "使用pip安装Docker Compose完成"
+        else
+            log_error "无法安装Docker Compose"
+            echo "请手动安装Docker Compose："
+            echo "方法1: pip3 install docker-compose"
+            echo "方法2: 手动下载二进制文件"
+            exit 1
+        fi
+    else
+        # 添加执行权限
+        ${SUDO_CMD} chmod +x /usr/local/bin/docker-compose
+        
+        # 创建软链接
+        ${SUDO_CMD} ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+        
+        log_info "Docker Compose安装完成"
+    fi
+    
+    # 验证安装
+    if command -v docker-compose &> /dev/null; then
+        log_info "Docker Compose验证成功: $(docker-compose --version)"
+    else
+        log_error "Docker Compose安装验证失败"
+        exit 1
+    fi
 }
 
 # 配置防火墙
@@ -193,8 +277,17 @@ setup_project() {
     
     PROJECT_DIR="/opt/tristaciss"
     
+<<<<<<< HEAD
     # 确保/opt目录存在且有权限
     ${SUDO_CMD} mkdir -p /opt
+=======
+    # 如果/opt目录不存在则创建
+    if [[ ! -d /opt ]]; then
+        ${SUDO_CMD} mkdir -p /opt
+    else
+        log_info "/opt 目录已存在，无需创建"
+    fi
+>>>>>>> c9dcf42291171571c9f7a57efc01cb004839209e
     
     log_info "项目将部署到: $PROJECT_DIR"
 }
@@ -205,6 +298,39 @@ download_project() {
     
     # 从GitHub克隆项目
     REPO_URL="https://github.com/MoRen9527/Tristaciss.git"
+<<<<<<< HEAD
+    PROJECT_DIR="/opt/tristaciss"
+    
+    if [[ -d "$PROJECT_DIR/.git" ]]; then
+        log_info "检测到Git仓库，更新代码..."
+        cd $PROJECT_DIR
+        # 自动检测当前分支并拉取
+        CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        log_info "当前分支: $CURRENT_BRANCH，拉取最新代码..."
+        git pull origin "$CURRENT_BRANCH"
+    else
+        log_info "从GitHub克隆项目: $REPO_URL"
+        
+        # 确保/opt目录存在且有正确权限
+        ${SUDO_CMD} mkdir -p /opt
+        ${SUDO_CMD} chmod 755 /opt
+        
+        # 如果目录已存在，先备份
+        if [[ -d "$PROJECT_DIR" ]]; then
+            log_warn "目录已存在，创建备份..."
+            ${SUDO_CMD} mv $PROJECT_DIR ${PROJECT_DIR}.backup.$(date +%Y%m%d_%H%M%S)
+        fi
+        
+        # 使用sudo克隆项目到/opt目录
+        ${SUDO_CMD} git clone $REPO_URL $PROJECT_DIR
+        
+        # 设置目录权限给当前用户
+        if [ "$USER" != "root" ]; then
+            ${SUDO_CMD} chown -R $USER:$USER $PROJECT_DIR
+        fi
+        
+        cd $PROJECT_DIR
+=======
     
     if [[ -d ".git" ]]; then
         log_info "检测到Git仓库，更新代码..."
@@ -228,6 +354,7 @@ download_project() {
             ${SUDO_CMD} chown -R $USER:$USER /opt/tristaciss
         fi
         
+>>>>>>> f678fd0b3612d6e189128bcb6e2b3433fdc32e09
         log_info "项目代码下载完成"
     fi
 }

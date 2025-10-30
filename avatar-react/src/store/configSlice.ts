@@ -9,7 +9,7 @@ interface ConfigState {
 const initialState: ConfigState = {
   theme: 'dark',
   language: 'zh-CN',
-  apiEndpoint: 'http://localhost:8008/api',
+  apiEndpoint: '/api',
 };
 
 const configSlice = createSlice({

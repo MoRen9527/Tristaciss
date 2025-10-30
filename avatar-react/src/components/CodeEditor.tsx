@@ -52,7 +52,7 @@ const CodeEditor: React.FC = () => {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:8008/api/cline/generate', {
+      const response = await fetch('/api/cline/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const CodeEditor: React.FC = () => {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:8008/api/cline/explain', {
+      const response = await fetch('/api/cline/explain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

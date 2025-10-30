@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8008/api',
+  baseURL: process.env.REACT_APP_API_URL || '/api',
   timeout: 60000, // 增加到60秒，适应AI响应时间
   headers: {
     'Content-Type': 'application/json'
@@ -142,7 +142,7 @@ export const chatAPI = {
         providerConfig.default_model = model;
       }
       
-      const rawBase = process.env.REACT_APP_API_URL || 'http://localhost:8008';
+      const rawBase = process.env.REACT_APP_API_URL || '';
       const baseUrl = rawBase.replace(/\/api\/?$/, '');
       const url = `${baseUrl}/api/chat/stream`;
       
@@ -263,7 +263,7 @@ export const chatAPI = {
   // 发送群聊消息
   sendGroupChatMessage: async (message, groupSettings, onChunk) => {
     try {
-      const rawBase = process.env.REACT_APP_API_URL || 'http://localhost:8008';
+      const rawBase = process.env.REACT_APP_API_URL || '';
       const baseUrl = rawBase.replace(/\/api\/?$/, '');
       const url = `${baseUrl}/api/chat/stream`;
       

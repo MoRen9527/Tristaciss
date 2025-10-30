@@ -47,7 +47,7 @@ class ExchangeRateService {
   private async fetchLatestRate(): Promise<void> {
     try {
       // 从后端API获取汇率，确保与后端计算一致
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8008/api';
+      const baseUrl = process.env.REACT_APP_API_URL || '/api';
       const response = await fetch(`${baseUrl}/exchange-rate`);
       
       if (!response.ok) {
@@ -77,7 +77,7 @@ class ExchangeRateService {
       
       // 如果后端API失败，尝试获取缓存的汇率
       try {
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8008/api';
+        const baseUrl = process.env.REACT_APP_API_URL || '/api';
         const cacheResponse = await fetch(`${baseUrl}/exchange-rate/current`);
         if (cacheResponse.ok) {
           const cacheData: BackendExchangeRateResponse = await cacheResponse.json();
