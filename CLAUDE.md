@@ -34,7 +34,7 @@ npm run test        # 替代测试命令
 ### 后端 (FastAPI - api-server/)
 ```bash
 cd api-server
-./.venv/scripts/activate
+.\.venv\scripts\activate
 
 # 开发
 python start_server.py        # 在端口8008启动服务器

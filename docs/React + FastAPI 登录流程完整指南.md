@@ -20,17 +20,25 @@
 
 ## 0. 前置准备与一键启动（本地开发）
 
-### 后端启动（FastAPI）
+### 后端环境准备与启动（FastAPI）
 ```bash
-# 1. 进入后端目录并激活虚拟环境
+# 1. 进入后端目录
 cd api-server
+
+# 2. 创建虚拟环境（仅首次执行）
+python -m venv .venv
+
+# 3. 激活虚拟环境
 .\.venv\Scripts\activate
 
-# 2. 启动服务（默认端口 8008）
+# 4. 安装依赖（requirements.txt）
+pip install -r requirements.txt
+
+# 5. 启动服务（默认端口 8008）
 python .\start_server.py
 ```
 
-### 前端启动（React + Vite）
+### 前端环境准备与启动（React + Vite）
 ```bash
 # 1. 安装依赖并启动开发服务器
 cd avatar-react

@@ -10,12 +10,20 @@ PROJECT_NAME="Tristaciss"
 REPO_DESCRIPTION="三元星球城市空间站 - AI应用生产制造平台"
 GITHUB_USERNAME="${1:-$(git config user.name)}"
 
-# 颜色输出
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# 颜色定义（使用 tput，自动适配终端类型，兼容性更好）：
+# RED    ：红色文本（setaf 1）
+# GREEN  ：绿色文本（setaf 2）
+# YELLOW ：黄色文本（setaf 3）
+# BLUE   ：蓝色文本（setaf 4）
+# NC     ：重置终端颜色（sgr0）
+# 用法示例：echo -e "${RED}这是红色${NC}"
+# tput 会根据 $TERM 环境变量自动选择合适的控制码，适用于大多数终端和远程环境。
+RED="$(tput setaf 1)"      # 红色
+GREEN="$(tput setaf 2)"    # 绿色
+YELLOW="$(tput setaf 3)"   # 黄色
+BLUE="$(tput setaf 4)"     # 蓝色
+NC="$(tput sgr0)"          # 终端重置（No Color）
+
 
 echo -e "${BLUE}🚀 Tristaciss项目仓库初始化脚本${NC}"
 echo "=================================================="
