@@ -1,7 +1,7 @@
 {
   "providers": {
     "openrouter": {
-      "api_key": "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",
+      "api_key": "",
       "base_url": "https://openrouter.ai/api/v1",
       "default_model": "deepseek/deepseek-r1:free",
       "enabled": true,
@@ -21,8 +21,7 @@
         "qwen/qwq-32b:free",
         "qwen/qwen3-235b-a22b:free",
         "anthropic/claude-3-5-sonnet"
-      ],
-      "updated_at": "2025-09-07T23:46:41.634556"
+      ]
     },
     "openrouter_official": {
       "api_key": "",
@@ -46,8 +45,7 @@
         "qwen/qwen3-30b-a3b:free",
         "qwen/qwq-32b:free",
         "qwen/qwen3-235b-a22b:free"
-      ],
-      "updated_at": "2025-09-07T22:24:17.856594"
+      ]
     },
     "openai": {
       "api_key": "",
@@ -55,30 +53,27 @@
       "default_model": "gpt-4o",
       "enabled": false,
       "openai_compatible": false,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:40.935267"
+      "enabled_models": []
     },
     "deepseek": {
-      "api_key": "sk-fe34348dced24f3da9dfcc38bcdf7734",
+      "api_key": "",
       "base_url": "https://api.deepseek.com/v1",
       "default_model": "deepseek-chat",
       "enabled": true,
       "openai_compatible": true,
       "enabled_models": [
         "deepseek-chat"
-      ],
-      "updated_at": "2025-09-07T23:46:41.425486"
+      ]
     },
     "glm": {
-      "api_key": "15a2323847724a62a48280976135dbe7.TnFrReicNY7tTL1p",
+      "api_key": "",
       "base_url": "https://open.bigmodel.cn/api/paas/v4",
       "default_model": "glm-4.5",
       "enabled": true,
       "openai_compatible": true,
       "enabled_models": [
         "glm-4.5-flash"
-      ],
-      "updated_at": "2025-09-07T23:46:41.534868"
+      ]
     },
     "google": {
       "api_key": "",
@@ -86,8 +81,7 @@
       "default_model": "gemini-1.5-pro",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.567036"
+      "enabled_models": []
     },
     "meta": {
       "api_key": "",
@@ -95,8 +89,7 @@
       "default_model": "llama-3.1-70b-instruct",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.616829"
+      "enabled_models": []
     },
     "anthropic": {
       "api_key": "",
@@ -104,8 +97,7 @@
       "default_model": "claude-3-5-sonnet-20241022",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.281417"
+      "enabled_models": []
     },
     "qwen": {
       "api_key": "",
@@ -113,8 +105,7 @@
       "default_model": "qwen-plus",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.458436"
+      "enabled_models": []
     },
     "moonshot": {
       "api_key": "",
@@ -122,22 +113,19 @@
       "default_model": "moonshot-v1-8k",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.580997"
+      "enabled_models": []
     },
     "together": {
       "api_key": "",
       "base_url": "https://api.together.xyz/v1",
       "default_model": "meta-llama/Llama-3-70b-chat-hf",
-      "enabled": false,
-      "updated_at": "2025-09-04T20:30:00.000000"
+      "enabled": false
     },
     "groq": {
       "api_key": "",
       "base_url": "https://api.groq.com/openai/v1",
       "default_model": "llama-3.1-70b-versatile",
-      "enabled": false,
-      "updated_at": "2025-09-04T20:30:00.000000"
+      "enabled": false
     },
     "modelscope": {
       "api_key": "",
@@ -145,8 +133,7 @@
       "default_model": "qwen-plus",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.646355"
+      "enabled_models": []
     },
     "huggingface": {
       "api_key": "",
@@ -154,8 +141,7 @@
       "default_model": "microsoft/DialoGPT-medium",
       "enabled": false,
       "openai_compatible": true,
-      "enabled_models": [],
-      "updated_at": "2025-09-07T23:46:41.605488"
+      "enabled_models": []
     }
   }
 }

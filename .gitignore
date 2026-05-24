@@ -18,6 +18,10 @@ __pycache__/
 .env.development
 .env.test
 .env.production.local
+api-server/provider_configs.json
+api-server/provider_configs.local.json
+api-server/provider_configs.json.backup*
+providers_config.json
 
 # 日志文件
 *.log
