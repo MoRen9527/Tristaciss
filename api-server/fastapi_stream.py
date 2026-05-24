@@ -16,6 +16,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from config_api import router as config_router
 from exchange_rate_api import router as exchange_rate_router
 from exchange_rate_api import router as exchange_rate_router
+from openai_compatible_api import (
+    configure_openai_compatible_router,
+    get_chat_completion_service,
+    router as openai_compatible_router,
+)
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
@@ -36,6 +41,7 @@ from providers import (
     ProviderManager, ProviderConfig, ProviderType, StreamChunk,
     ProviderError, ProviderConnectionError, ProviderAuthenticationError
 )
+from openai_ingress_models import OpenAIChatCompletionsRequest, OpenAIChatMessage
 
 # 导入配置管理器
 from config_manager import config_manager
@@ -162,6 +168,10 @@ app.include_router(config_router)
 
 # 包含汇率API路由
 app.include_router(exchange_rate_router)
+
+# 配置并挂载 OpenAI-compatible ingress 骨架路由。
+configure_openai_compatible_router(provider_manager)
+app.include_router(openai_compatible_router)
 
 # 包含简化配置API路由
 
@@ -994,7 +1004,7 @@ async def get_providers():
         
         # 从配置文件获取已配置的providers
         if config_manager:
-            saved_configs = config_manager.get_all_provider_configs()
+            saved_configs = config_manager.get_all_provider_configs(include_secrets=False)
             
             for provider_name, config_data in saved_configs.items():
                 if provider_name == 'test_provider':  # 跳过测试配置
@@ -1004,8 +1014,14 @@ async def get_providers():
                 # if not config_data.get('enabled', False):
                 #     continue
                     
-                # 测试连接状态
-                is_connected = await provider_manager.test_connection(provider_name)
+                has_api_key = bool(config_data.get('has_api_key'))
+                is_enabled = bool(config_data.get('enabled', False))
+                is_connected = False
+                if has_api_key and is_enabled and provider_manager.get_provider(provider_name):
+                    try:
+                        is_connected = await provider_manager.test_connection(provider_name)
+                    except Exception as exc:
+                        logger.warning(f"测试{provider_name}连接失败: {exc}")
                 
                 # 构建provider信息
                 provider_info = {
@@ -1033,16 +1049,37 @@ async def get_providers():
                     "lastTested": config_data.get('updated_at'),
                     "connected": is_connected,
                     "config": {
-                        "enabled": config_data.get('enabled', True),
+                        "enabled": is_enabled,
                         "base_url": config_data.get('base_url', ''),
                         "default_model": config_data.get('default_model', ''),
                         "api_key": config_data.get('api_key', ''),
+                        "has_api_key": has_api_key,
+                        "api_key_source": config_data.get('api_key_source', 'unset'),
                         "enabled_models": config_data.get('enabled_models', []),
                         "enabledModels": config_data.get('enabled_models', [])
                     }
                 }
                 
                 providers_list.append(provider_info)
+
+        providers_list.insert(0, {
+            "name": "auto",
+            "displayName": "Auto Router",
+            "status": "online",
+            "models": ["auto"],
+            "features": ["自动路由", "成本感知"],
+            "description": "根据任务类型、复杂度与成本/质量偏好自动选择 provider",
+            "lastTested": datetime.now().isoformat(),
+            "connected": True,
+            "config": {
+                "enabled": True,
+                "base_url": "",
+                "default_model": "auto",
+                "api_key": "",
+                "enabled_models": ["auto"],
+                "enabledModels": ["auto"]
+            }
+        })
         
         # 如果没有配置的providers，返回默认列表，包含gpt-oss-20b
         if not providers_list:
@@ -1347,7 +1384,10 @@ async def test_provider_connection(request: dict):
     """测试提供商连接"""
     try:
         provider_name = request.get("provider")
-        provider_config = request.get("config")
+        provider_config = request.get("config") or {}
+        placeholder_key = getattr(config_manager, "SECRET_PLACEHOLDER", "__ENV_CONFIGURED__")
+        inline_api_key = provider_config.get('api_key', '')
+        has_inline_api_key = bool(inline_api_key and inline_api_key != placeholder_key)
         
         logger.info(f"测试提供商连接: {provider_name}")
         
@@ -1362,8 +1402,8 @@ async def test_provider_connection(request: dict):
                 }
             )
         
-        # 如果提供了配置信息，使用临时provider进行测试
-        if provider_config:
+        # 如果提供了真实密钥，使用临时provider进行测试
+        if has_inline_api_key:
             logger.info(f"使用临时配置测试连接: {provider_name}, 配置: {provider_config}")
             
             # 根据provider类型创建临时配置
@@ -1696,10 +1736,7 @@ async def stream_chat_with_config(request: dict):
         
         # 单聊模式
         if chat_mode == 'single':
-            if not provider_config:
-                raise HTTPException(status_code=400, detail="单聊模式缺少provider配置")
-            
-            return await handle_single_chat(query, provider_name, provider_config)
+            return await handle_single_chat(query, provider_name, provider_config or {})
         
         # 群聊模式
         elif chat_mode == 'group':
@@ -1719,6 +1756,9 @@ async def stream_chat_with_config(request: dict):
 
 async def handle_single_chat(query: str, provider_name: str, provider_config: dict):
     """处理单聊模式"""
+    if provider_name == 'auto':
+        return await handle_single_chat_auto_route(query)
+
     # 构建消息格式
     messages = [{"role": "user", "content": query}]
     
@@ -1733,13 +1773,32 @@ async def handle_single_chat(query: str, provider_name: str, provider_config: di
     provider_type = provider_type_map.get(provider_name)
     if not provider_type:
         raise HTTPException(status_code=400, detail=f"不支持的provider类型: {provider_name}")
+
+    placeholder_key = getattr(config_manager, "SECRET_PLACEHOLDER", "__ENV_CONFIGURED__")
+    effective_provider_config = dict(provider_config or {})
+    inline_api_key = effective_provider_config.get('api_key', '')
+    if not inline_api_key or inline_api_key == placeholder_key:
+        registered_provider = provider_manager.get_provider(provider_name)
+        if not registered_provider:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{provider_name} 未配置环境变量密钥或未注册到运行时",
+            )
+
+        effective_provider_config['api_key'] = registered_provider.config.api_key
+        effective_provider_config['base_url'] = (
+            effective_provider_config.get('base_url') or registered_provider.config.base_url
+        )
+        effective_provider_config['default_model'] = (
+            effective_provider_config.get('default_model') or registered_provider.config.default_model
+        )
     
     # 创建临时provider配置
     temp_config = ProviderConfig(
         provider_type=provider_type,
-        api_key=provider_config.get('api_key', ''),
-        base_url=provider_config.get('base_url', ''),
-        default_model=provider_config.get('default_model', '')
+        api_key=effective_provider_config.get('api_key', ''),
+        base_url=effective_provider_config.get('base_url', ''),
+        default_model=effective_provider_config.get('default_model', '')
     )
     
     # 创建临时provider实例
@@ -1810,6 +1869,42 @@ async def handle_single_chat(query: str, provider_name: str, provider_config: di
             error_data = {"type": "error", "error": str(e)}
             yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
             
+    return StreamingResponse(generate(), media_type='text/event-stream', headers={
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': 'true'
+    })
+
+async def handle_single_chat_auto_route(query: str):
+    """处理自动路由单聊模式，复用 Phase C 路由和流式执行链。"""
+    service = get_chat_completion_service()
+    openai_request = OpenAIChatCompletionsRequest(
+        messages=[OpenAIChatMessage(role="user", content=query)],
+        stream=True,
+    )
+
+    async def generate():
+        try:
+            yield f"data: {json.dumps({'type': 'start', 'provider': 'auto'}, ensure_ascii=False)}\n\n"
+            async for chunk in service.stream_completion(openai_request):
+                choice = chunk.choices[0] if chunk.choices else None
+                content = choice.delta.content if choice and choice.delta else None
+                if content:
+                    data = {
+                        "type": "content",
+                        "content": content,
+                        "provider": chunk.tmv.resolved_provider if chunk.tmv else 'auto',
+                        "model": chunk.tmv.resolved_model if chunk.tmv else 'auto',
+                    }
+                    yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'end'}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            logger.error(f"自动路由单聊流式生成失败: {e}")
+            error_data = {"type": "error", "error": str(e)}
+            yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
+
     return StreamingResponse(generate(), media_type='text/event-stream', headers={
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
@@ -2406,8 +2501,9 @@ async def get_providers_config():
                 "provider_type": provider.config.provider_type.value,
                 "base_url": provider.config.base_url,
                 "default_model": provider.config.default_model,
-                "api_key": provider.config.api_key[:10] + "..." if provider.config.api_key else None,
+                "api_key": config_manager.SECRET_PLACEHOLDER if provider.config.api_key else None,
                 "has_api_key": bool(provider.config.api_key),
+                "api_key_source": "env" if provider.config.api_key else "unset",
                 "connected": True
             }
         
@@ -2430,12 +2526,16 @@ async def test_provider_connection(request: dict):
     try:
         provider_name = request.get("provider")
         provider_config = request.get("config", {})
+        placeholder_key = getattr(config_manager, "SECRET_PLACEHOLDER", "__ENV_CONFIGURED__")
+
+        if provider_name and provider_manager.get_provider(provider_name):
+            connected = await provider_manager.test_connection(provider_name)
+        else:
+            connected = bool(provider_config.get("api_key") and provider_config.get("api_key") != placeholder_key)
         
-        # 这里可以添加实际的连接测试逻辑
-        # 暂时返回成功状态
         return {
-            "connected": True,
-            "message": f"{provider_name} 连接测试成功"
+            "connected": connected,
+            "message": f"{provider_name} 连接测试{'成功' if connected else '失败'}"
         }
     except Exception as e:
         logger.error(f"测试提供商连接失败: {e}")
@@ -2449,7 +2549,7 @@ async def get_provider_configs():
     """获取所有提供商配置"""
     try:
         from config_manager import config_manager
-        configs = config_manager.get_all_provider_configs()
+        configs = config_manager.get_all_provider_configs(include_secrets=False)
         return configs
     except Exception as e:
         logger.error(f"获取提供商配置失败: {e}")

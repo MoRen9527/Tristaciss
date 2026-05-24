@@ -30,6 +30,15 @@ logger = logging.getLogger(__name__)
 
 class ProviderManager:
     """Provider管理器"""
+
+    _SUPPORTED_PROVIDER_TYPES = {
+        'openrouter': ProviderType.OPENROUTER,
+        'openrouter_compatible': ProviderType.OPENROUTER,
+        'openrouter_official': ProviderType.OPENROUTER,
+        'openai': ProviderType.OPENAI,
+        'deepseek': ProviderType.OPENAI,
+        'glm': ProviderType.GLM,
+    }
     
     def __init__(self):
         """初始化Provider管理器"""
@@ -50,39 +59,43 @@ class ProviderManager:
             logger.info(f"从配置文件加载到 {len(saved_configs)} 个Provider配置")
             
             for provider_name, saved_config in saved_configs.items():
-                # 修改条件：只要有配置就尝试加载，不管是否启用或有API密钥
-                if saved_config and provider_name != 'test_provider':
-                    try:
-                        # 根据provider名称确定类型
-                        if provider_name in ['openrouter', 'openrouter_compatible']:
-                            provider_type = ProviderType.OPENROUTER
-                        elif provider_name == 'openrouter_official':
-                            provider_type = ProviderType.OPENROUTER
-                        elif provider_name in ['openai', 'deepseek']:
-                            provider_type = ProviderType.OPENAI
-                        elif provider_name == 'glm':
-                            provider_type = ProviderType.GLM
-                        else:
-                            logger.warning(f"未知的provider类型: {provider_name}")
-                            continue
-                        
-                        config = ProviderConfig(
-                            provider_type=provider_type,
-                            api_key=saved_config.get('api_key', ''),
-                            base_url=saved_config.get('base_url', ''),
-                            default_model=saved_config.get('default_model', '')
-                        )
-                        
-                        # 即使没有API密钥也尝试注册，这样前端可以看到并配置
-                        success = self.register_provider(provider_name, config, skip_validation=True)
-                        if success:
-                            if not self._default_provider:
-                                self._default_provider = provider_name
-                            logger.info(f"从配置文件加载Provider成功: {provider_name}")
-                        else:
-                            logger.error(f"从配置文件加载Provider失败: {provider_name}")
-                    except Exception as e:
-                        logger.error(f"配置文件Provider配置失败 - {provider_name}: {e}")
+                if not saved_config or provider_name == 'test_provider':
+                    continue
+
+                is_enabled = saved_config.get('enabled', True)
+                provider_type = self._SUPPORTED_PROVIDER_TYPES.get(provider_name)
+                runtime_api_key = saved_config.get('api_key', '').strip()
+
+                # 配置层可以保留 disabled 占位项，但运行时只注册真正启用的 provider。
+                if not is_enabled:
+                    logger.debug(f"跳过未启用的Provider配置: {provider_name}")
+                    continue
+
+                if not runtime_api_key:
+                    logger.debug(f"跳过未配置环境变量密钥的Provider: {provider_name}")
+                    continue
+
+                if not provider_type:
+                    logger.warning(f"已启用但当前运行时未实现的provider类型: {provider_name}")
+                    continue
+
+                try:
+                    config = ProviderConfig(
+                        provider_type=provider_type,
+                        api_key=runtime_api_key,
+                        base_url=saved_config.get('base_url', ''),
+                        default_model=saved_config.get('default_model', '')
+                    )
+
+                    success = self.register_provider(provider_name, config, skip_validation=True)
+                    if success:
+                        if not self._default_provider:
+                            self._default_provider = provider_name
+                        logger.info(f"从配置文件加载Provider成功: {provider_name}")
+                    else:
+                        logger.error(f"从配置文件加载Provider失败: {provider_name}")
+                except Exception as e:
+                    logger.error(f"配置文件Provider配置失败 - {provider_name}: {e}")
         
         # 如果没有从配置文件加载到任何provider，则从环境变量加载
         if not self._providers:

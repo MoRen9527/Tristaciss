@@ -5,10 +5,34 @@ OpenRouter 双模式集成测试
 """
 
 import asyncio
-import json
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from providers.manager import ProviderManager
 from providers.openrouter import OpenRouterProvider
 from providers.base import ProviderConfig, ProviderType
+
+
+load_dotenv(Path(__file__).with_name(".env"))
+
+
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"缺少环境变量 {name}，请先在 api-server/.env 或当前 shell 中配置")
+    return value
+
+
+def load_config() -> ProviderConfig:
+    return ProviderConfig(
+        name="openrouter",
+        provider_type=ProviderType.OPENROUTER,
+        api_key=require_env("OPENROUTER_API_KEY"),
+        base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip(),
+        openai_compatible=True,
+        default_model=os.getenv("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-r1:free").strip() or "deepseek/deepseek-r1:free",
+    )
 
 async def test_openrouter_integration():
     """测试OpenRouter集成"""
@@ -18,14 +42,9 @@ async def test_openrouter_integration():
     # 1. 测试免费模型识别
     print("1. 测试免费模型识别:")
     
-    # 创建OpenRouter配置
-    config = ProviderConfig(
-        name="openrouter",
-        provider_type=ProviderType.OPENROUTER,
-        api_key="sk-or-v1-placeholder",
-        base_url="https://openrouter.ai/api/v1",
-        openai_compatible=True
-    )
+    config = load_config()
+    print("  API Key: [已通过环境变量加载]")
+    print(f"  Base URL: {config.base_url}")
     
     # 创建OpenRouter Provider
     provider = OpenRouterProvider(config)
@@ -50,7 +69,7 @@ async def test_openrouter_integration():
     manager = ProviderManager()
     
     # 注册OpenRouter Provider
-    await manager.register_provider("openrouter", config)
+    manager.register_provider("openrouter", config, skip_validation=True)
     
     # 测试通用免费模型检查
     for model in test_models:
@@ -81,4 +100,8 @@ async def test_openrouter_integration():
     print("\n=== 测试完成 ===")
 
 if __name__ == "__main__":
-    asyncio.run(test_openrouter_integration())
+    try:
+        asyncio.run(test_openrouter_integration())
+    except RuntimeError as e:
+        print(f"\n❌ 配置错误: {e}")
+        raise SystemExit(1) from e

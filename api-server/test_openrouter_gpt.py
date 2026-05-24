@@ -7,28 +7,47 @@ OpenRouter GPT-OSS-20B:Free API 连接测试脚本
 
 import os
 import asyncio
+from pathlib import Path
+
+from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
-# OpenRouter配置
-OPENROUTER_API_KEY = "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"
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_MODEL = "openai/gpt-oss-20b:free"
 
-print("=" * 60)
-print("🧪 OpenRouter GPT-OSS-20B:Free API 连接测试")
-print("=" * 60)
-print(f"🔑 API Key: {OPENROUTER_API_KEY[:20]}...")
-print(f"🌐 Base URL: {OPENROUTER_BASE_URL}")
-print(f"🤖 模型: {OPENROUTER_MODEL}")
-print("=" * 60)
+load_dotenv(Path(__file__).with_name(".env"))
 
-async def test_openrouter_connection():
+
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"缺少环境变量 {name}，请先在 api-server/.env 或当前 shell 中配置")
+    return value
+
+
+def load_config() -> dict:
+    return {
+        "api_key": require_env("OPENROUTER_API_KEY"),
+        "base_url": os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip(),
+        "model": os.getenv("OPENROUTER_DEFAULT_MODEL", "openai/gpt-oss-20b:free").strip() or "openai/gpt-oss-20b:free",
+    }
+
+
+def print_config(config: dict):
+    print("=" * 60)
+    print("🧪 OpenRouter GPT-OSS-20B:Free API 连接测试")
+    print("=" * 60)
+    print("🔑 API Key: [已通过环境变量加载]")
+    print(f"🌐 Base URL: {config['base_url']}")
+    print(f"🤖 模型: {config['model']}")
+    print("=" * 60)
+
+
+async def test_openrouter_connection(config: dict):
     """测试OpenRouter API连接"""
     
     # 初始化客户端
     client = AsyncOpenAI(
-        api_key=OPENROUTER_API_KEY,
-        base_url=OPENROUTER_BASE_URL
+        api_key=config["api_key"],
+        base_url=config["base_url"]
     )
     
     print("\n1️⃣ 测试API连接和认证...")
@@ -40,13 +59,13 @@ async def test_openrouter_connection():
         # 查找目标模型
         target_model_found = False
         for model in models.data:
-            if model.id == OPENROUTER_MODEL:
+            if model.id == config["model"]:
                 target_model_found = True
                 print(f"✅ 找到目标模型: {model.id}")
                 break
         
         if not target_model_found:
-            print(f"⚠️  未找到目标模型 {OPENROUTER_MODEL}")
+            print(f"⚠️  未找到目标模型 {config['model']}")
             print("📋 可用的免费模型列表（前10个）:")
             free_models = [m for m in models.data if 'free' in m.id.lower()][:10]
             for i, model in enumerate(free_models):
@@ -56,11 +75,11 @@ async def test_openrouter_connection():
         print(f"❌ 连接失败: {e}")
         return False
     
-    print(f"\n2️⃣ 测试模型 '{OPENROUTER_MODEL}' 对话功能...")
+    print(f"\n2️⃣ 测试模型 '{config['model']}' 对话功能...")
     try:
         # 测试简单对话
         response = await client.chat.completions.create(
-            model=OPENROUTER_MODEL,
+            model=config["model"],
             messages=[
                 {"role": "user", "content": "What is the meaning of life?"}
             ],
@@ -87,7 +106,7 @@ async def test_openrouter_connection():
     try:
         # 测试流式对话
         stream = await client.chat.completions.create(
-            model=OPENROUTER_MODEL,
+            model=config["model"],
             messages=[
                 {"role": "user", "content": "Count from 1 to 5"}
             ],
@@ -121,7 +140,7 @@ async def test_openrouter_connection():
     try:
         # 测试中文对话能力
         response = await client.chat.completions.create(
-            model=OPENROUTER_MODEL,
+            model=config["model"],
             messages=[
                 {"role": "user", "content": "你好，请简单介绍一下你自己。"}
             ],
@@ -161,7 +180,9 @@ async def test_openrouter_connection():
 async def main():
     """主测试函数"""
     try:
-        success = await test_openrouter_connection()
+        config = load_config()
+        print_config(config)
+        success = await test_openrouter_connection(config)
         
         print("\n" + "=" * 60)
         if success:
@@ -179,8 +200,12 @@ async def main():
             print("   4. 查看OpenRouter控制台是否有使用限制")
         print("=" * 60)
         
+    except RuntimeError as e:
+        print(f"\n❌ 配置错误: {e}")
+        raise SystemExit(1) from e
     except Exception as e:
         print(f"\n❌ 测试过程中发生严重错误: {e}")
+        raise SystemExit(1) from e
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -7,8 +7,15 @@
 import asyncio
 import aiohttp
 import json
+import os
 import time
 from datetime import datetime
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+
+load_dotenv(Path(__file__).with_name(".env"))
 
 # 新添加的免费模型列表
 NEW_FREE_MODELS = [
@@ -25,9 +32,23 @@ NEW_FREE_MODELS = [
 # 测试消息
 TEST_MESSAGE = "请用中文简单介绍一下你自己，包括你的能力和特点。"
 
-async def test_model(session, api_key, model_name):
+
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"缺少环境变量 {name}，请先在 api-server/.env 或当前 shell 中配置")
+    return value
+
+
+def load_config() -> dict:
+    return {
+        "api_key": require_env("OPENROUTER_API_KEY"),
+        "base_url": os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip() or "https://openrouter.ai/api/v1",
+    }
+
+async def test_model(session, base_url, api_key, model_name):
     """测试单个模型"""
-    url = "https://openrouter.ai/api/v1/chat/completions"
+    url = f"{base_url.rstrip('/')}/chat/completions"
     
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -88,28 +109,23 @@ async def test_model(session, api_key, model_name):
 
 async def main():
     """主测试函数"""
-    # 从配置文件读取API密钥
     try:
-        with open('provider_configs.json', 'r', encoding='utf-8') as f:
-            config = json.load(f)
-            api_key = config['providers']['openrouter']['api_key']
-    except Exception as e:
-        print(f"❌ 无法读取API密钥: {e}")
-        return
-    
-    if not api_key or api_key.startswith('sk-or-v1-') == False:
-        print("❌ OpenRouter API密钥无效")
-        return
+        config = load_config()
+    except RuntimeError as e:
+        print(f"❌ 配置错误: {e}")
+        raise SystemExit(1) from e
     
     print(f"🚀 开始测试 {len(NEW_FREE_MODELS)} 个新添加的免费模型")
     print(f"📅 测试时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("🔑 API Key: [已通过环境变量加载]")
+    print(f"🌐 Base URL: {config['base_url']}")
     print("=" * 80)
     
     results = []
     
     async with aiohttp.ClientSession() as session:
         # 并发测试所有模型
-        tasks = [test_model(session, api_key, model) for model in NEW_FREE_MODELS]
+        tasks = [test_model(session, config['base_url'], config['api_key'], model) for model in NEW_FREE_MODELS]
         results = await asyncio.gather(*tasks)
     
     # 统计结果

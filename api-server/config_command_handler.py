@@ -74,7 +74,7 @@ class ConfigCommandHandler:
             # 为每个provider添加配置状态
             provider_list = []
             for provider_name, provider_info in providers.items():
-                config = self.config_manager.get_provider_config(provider_name)
+                config = self.config_manager.get_provider_config(provider_name, include_secrets=False)
                 provider_list.append({
                     "name": provider_name,
                     "info": provider_info,
@@ -113,7 +113,7 @@ class ConfigCommandHandler:
                     "requestId": command.get('requestId')
                 }
             
-            config = self.config_manager.get_provider_config(provider_name)
+            config = self.config_manager.get_provider_config(provider_name, include_secrets=False)
             
             return {
                 "success": True,
@@ -160,11 +160,12 @@ class ConfigCommandHandler:
             
             if success:
                 logger.info(f"Provider {provider_name} 配置更新成功")
+                safe_config = self.config_manager.get_provider_config(provider_name, include_secrets=False)
                 return {
                     "success": True,
                     "data": {
                         "provider": provider_name,
-                        "config": config_data,
+                        "config": safe_config if safe_config else {},
                         "message": f"Provider {provider_name} 配置更新成功"
                     },
                     "timestamp": datetime.now().isoformat(),
@@ -232,7 +233,7 @@ class ConfigCommandHandler:
     async def _handle_get_all_configs(self, command: Dict[str, Any]) -> Dict[str, Any]:
         """获取所有配置"""
         try:
-            all_configs = self.config_manager.get_all_provider_configs()
+            all_configs = self.config_manager.get_all_provider_configs(include_secrets=False)
             
             return {
                 "success": True,
@@ -313,7 +314,9 @@ class ConfigCommandHandler:
             }
             
             # 基本验证
-            if provider_name in ['openai', 'anthropic'] and not config_data.get('api_key'):
+            existing_config = self.config_manager.get_provider_config(provider_name)
+            has_runtime_api_key = bool(existing_config and existing_config.get('api_key'))
+            if provider_name in ['openai', 'anthropic'] and not (config_data.get('api_key') or has_runtime_api_key):
                 validation_result["valid"] = False
                 validation_result["errors"].append("API密钥不能为空")
             

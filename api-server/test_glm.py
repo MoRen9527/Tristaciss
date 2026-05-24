@@ -7,28 +7,47 @@
 
 import os
 import asyncio
+from pathlib import Path
+
+from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
-# 从环境变量获取配置或使用提供的密钥
-GLM_API_KEY = os.getenv("GLM_API_KEY", "15a2323847724a62a48280976135dbe7.TnFrReicNY7tTL1p")
-GLM_BASE_URL = os.getenv("GLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4")
-GLM_MODEL = os.getenv("GLM_DEFAULT_MODEL", "glm-4")
 
-print("=" * 60)
-print("🧪 智谱GLM API 连接测试")
-print("=" * 60)
-print(f"🔑 API Key: {GLM_API_KEY[:20]}...")
-print(f"🌐 Base URL: {GLM_BASE_URL}")
-print(f"🤖 模型: {GLM_MODEL}")
-print("=" * 60)
+load_dotenv(Path(__file__).with_name(".env"))
 
-async def test_glm_connection():
+
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"缺少环境变量 {name}，请先在 api-server/.env 或当前 shell 中配置")
+    return value
+
+
+def load_config() -> dict:
+    return {
+        "api_key": require_env("GLM_API_KEY"),
+        "base_url": os.getenv("GLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4").strip(),
+        "model": os.getenv("GLM_DEFAULT_MODEL", "glm-4").strip() or "glm-4",
+    }
+
+
+def print_config(config: dict):
+    print("=" * 60)
+    print("🧪 智谱GLM API 连接测试")
+    print("=" * 60)
+    print("🔑 API Key: [已通过环境变量加载]")
+    print(f"🌐 Base URL: {config['base_url']}")
+    print(f"🤖 模型: {config['model']}")
+    print("=" * 60)
+
+
+async def test_glm_connection(config: dict):
     """测试智谱GLM API连接"""
     
     # 初始化客户端
     client = AsyncOpenAI(
-        api_key=GLM_API_KEY,
-        base_url=GLM_BASE_URL
+        api_key=config["api_key"],
+        base_url=config["base_url"]
     )
     
     print("\n1️⃣ 测试API连接和认证...")
@@ -46,11 +65,11 @@ async def test_glm_connection():
         print(f"❌ 连接失败: {e}")
         return False
     
-    print(f"\n2️⃣ 测试模型 '{GLM_MODEL}' 对话功能...")
+    print(f"\n2️⃣ 测试模型 '{config['model']}' 对话功能...")
     try:
         # 测试简单对话
         response = await client.chat.completions.create(
-            model=GLM_MODEL,
+            model=config["model"],
             messages=[
                 {"role": "user", "content": "你好，请简单介绍一下你自己。"}
             ],
@@ -73,7 +92,7 @@ async def test_glm_connection():
     try:
         # 测试流式对话
         stream = await client.chat.completions.create(
-            model=GLM_MODEL,
+            model=config["model"],
             messages=[
                 {"role": "user", "content": "请数1到5"}
             ],
@@ -116,7 +135,9 @@ async def test_glm_connection():
 async def main():
     """主测试函数"""
     try:
-        success = await test_glm_connection()
+        config = load_config()
+        print_config(config)
+        success = await test_glm_connection(config)
         
         print("\n" + "=" * 60)
         if success:
@@ -130,8 +151,12 @@ async def main():
             print("   3. 确认模型名称是否支持")
         print("=" * 60)
         
+    except RuntimeError as e:
+        print(f"\n❌ 配置错误: {e}")
+        raise SystemExit(1) from e
     except Exception as e:
         print(f"\n❌ 测试过程中发生严重错误: {e}")
+        raise SystemExit(1) from e
 
 if __name__ == "__main__":
     asyncio.run(main())

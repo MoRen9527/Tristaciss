@@ -7,12 +7,25 @@ OpenRouter 双模式测试脚本
 import asyncio
 import json
 import logging
+import os
+from pathlib import Path
 from typing import List, Dict, Any
 
+from dotenv import load_dotenv
 from providers.manager import ProviderManager
 from providers.base import ProviderConfig, ProviderType
 from providers.free_model_manager import free_model_manager
 from providers.multi_model_router import MultiModelRouter, RoutingStrategy
+
+
+load_dotenv(Path(__file__).with_name(".env"))
+
+
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"缺少环境变量 {name}，请先在 api-server/.env 或当前 shell 中配置")
+    return value
 
 # 配置日志
 logging.basicConfig(
@@ -26,7 +39,9 @@ class OpenRouterDualModeTest:
     
     def __init__(self):
         self.provider_manager = ProviderManager()
-        self.test_api_key = "sk-or-v1-placeholder"  # 测试用占位符
+        self.test_api_key = require_env("OPENROUTER_API_KEY")
+        self.base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip()
+        self.default_model = os.getenv("OPENROUTER_DEFAULT_MODEL", "deepseek/deepseek-r1:free").strip() or "deepseek/deepseek-r1:free"
         
     async def test_free_model_manager(self):
         """测试免费模型管理器"""
@@ -60,8 +75,8 @@ class OpenRouterDualModeTest:
             config = ProviderConfig(
                 provider_type=ProviderType.OPENROUTER,
                 api_key=self.test_api_key,
-                base_url="https://openrouter.ai/api/v1",
-                default_model="deepseek/deepseek-r1:free"
+                base_url=self.base_url,
+                default_model=self.default_model
             )
             
             success = await self.provider_manager.configure_provider("openrouter", config)
@@ -102,8 +117,8 @@ class OpenRouterDualModeTest:
             config = ProviderConfig(
                 provider_type=ProviderType.OPENROUTER,
                 api_key=self.test_api_key,
-                base_url="https://openrouter.ai/api/v1",
-                default_model="deepseek/deepseek-r1:free"
+                base_url=self.base_url,
+                default_model=self.default_model
             )
             
             success = await self.provider_manager.configure_provider("openrouter_official", config)
@@ -328,4 +343,8 @@ async def main():
     logger.info("测试结果已保存到 openrouter_test_results.json")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        logger.error(f"配置错误: {e}")
+        raise SystemExit(1) from e
