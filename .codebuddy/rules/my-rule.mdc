@@ -1,0 +1,37 @@
+---
+description: 
+globs:
+alwaysApply: true
+---
+此项目采用前后端分离设计。
+
+后端设计：
+后端采用fastapi，后端代码在api-server文件夹。
+后端大模型处理层采用自有设计，新增功能和代码实现可以参考借鉴langchain的优秀设计理念，但并非全盘采用。
+具体可以：
+1. 借鉴消息管理机制：
+实现类似LangChain的消息历史管理，但保持自定义实现
+可以参考其记忆组件的设计，优化当前的对话历史存储
+2. 参考上下文管理：
+借鉴LangChain的上下文窗口管理策略
+实现类似的摘要或滑动窗口机制，但保持代码的自主控制
+3. 模块化设计：
+参考LangChain的模块化设计思想，改进当前架构
+使各组件更加解耦，便于扩展和维护
+
+前端设计：
+前端采用react，ui采用的material ui，前端代码在前端代码在avatar-react文件夹。
+
+后端代码规范：
+
+前端代码规范：
+严禁使用!important,必须改为类选择器等规范实现方法。
+
+运行方法：
+1. 启动后端服务
+cd api-server
+.\.venv\Scripts\activate
+python .\start_server.py
+2. 启动前端服务
+cd avatar-react
+npm run dev
