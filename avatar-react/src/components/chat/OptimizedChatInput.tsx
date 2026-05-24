@@ -47,7 +47,7 @@ const OptimizedChatInput: React.FC<OptimizedChatInputProps> = memo(({
     const textarea = e.target;
     textarea.style.height = 'auto';
     const scrollHeight = textarea.scrollHeight;
-    const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
+    const lineHeight = Number.parseInt(getComputedStyle(textarea).lineHeight, 10) || 20;
     const maxHeight = lineHeight * maxRows;
     textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
   }, [onChange, maxRows]);
@@ -72,6 +72,7 @@ const OptimizedChatInput: React.FC<OptimizedChatInputProps> = memo(({
       e.preventDefault();
       if (!disabled && localValue.trim()) {
         onSend();
+        return;
       }
     }
     onKeyPress?.(e);

@@ -198,7 +198,7 @@ const GroupChatSettings: React.FC<GroupChatSettingsProps> = ({ open, onClose }) 
   // 获取可用的AI提供商数量
   const getAvailableProviders = (): number => {
     return Object.values(providerConfigs).filter(provider => 
-      provider.enabled && provider.apiKey
+      provider.enabled && (provider.apiKey || provider.hasApiKey)
     ).length;
   };
 

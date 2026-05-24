@@ -6,6 +6,8 @@
 export interface ProviderConfig {
   enabled: boolean;
   apiKey: string;
+  hasApiKey?: boolean;
+  apiKeySource?: string;
   baseUrl: string;
   defaultModel: string;
   enabledModels: string[];
@@ -48,6 +50,8 @@ export interface ConfigResponseData {
     [providerKey: string]: {
       enabled: boolean;
       api_key: string;
+      has_api_key?: boolean;
+      api_key_source?: string;
       base_url: string;
       default_model: string;
       enabled_models: string[];

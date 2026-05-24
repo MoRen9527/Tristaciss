@@ -149,12 +149,12 @@ const GroupChatCard: React.FC<GroupChatCardProps> = ({ card, onUpdate }) => {
         // 构建模型提供商列表（与ChatPanel的loadProviderConfigs逻辑完全一致）
         const allProviders = defaultProviders.map(defaultProvider => {
           const savedConfig = allConfigs[defaultProvider.id];
-          const isConfigured = savedConfig && savedConfig.enabled && savedConfig.apiKey;
+          const isConfigured = savedConfig && savedConfig.enabled && (savedConfig.apiKey || savedConfig.hasApiKey);
           
           return {
             ...defaultProvider,
             enabled: Boolean(isConfigured),
-            api_key: savedConfig?.apiKey || '',
+            has_api_key: Boolean(savedConfig?.apiKey || savedConfig?.hasApiKey),
             base_url: savedConfig?.baseUrl || defaultProvider.base_url,
             default_model: savedConfig?.defaultModel || defaultProvider.default_model,
             enabled_models: savedConfig?.enabledModels || []
@@ -162,7 +162,7 @@ const GroupChatCard: React.FC<GroupChatCardProps> = ({ card, onUpdate }) => {
         });
         
         // 只显示已启用且有API密钥的提供商（与ChatPanel的getAvailableProviders完全一致）
-        const availableProviders = allProviders.filter(p => p.enabled && p.api_key);
+        const availableProviders = allProviders.filter(p => p.enabled && p.has_api_key);
         
         // 构建模型列表
         const providerMap = {};

@@ -460,13 +460,16 @@ const ProviderSettings: React.FC<ProviderSettingsProps> = ({ open, onClose, embe
             console.log(`🔄 原始openaiCompatible值:`, providerData.openaiCompatible);
             
             if (mergedConfigs[providerName]) {
+              const backendHasApiKey = Boolean(providerData.hasApiKey || providerData.has_api_key || (providerData.apiKey && providerData.apiKey.trim()));
               mergedConfigs[providerName] = {
                 ...mergedConfigs[providerName], // 保留当前配置
                 enabled: providerData.enabled || false,
-                // 只有当后端有有效的 API Key 时才使用，否则保留当前的
+                // 环境变量模式下后端不再回显真实 key；有运行时密钥时清空本地回显，避免保留旧值
                 apiKey: providerData.apiKey && providerData.apiKey.trim() && providerData.apiKey !== 'sk-deepseek-test-123' 
                   ? providerData.apiKey 
-                  : mergedConfigs[providerName].apiKey,
+                  : (backendHasApiKey ? '' : mergedConfigs[providerName].apiKey),
+                hasApiKey: backendHasApiKey,
+                apiKeySource: providerData.apiKeySource || providerData.api_key_source || (backendHasApiKey ? 'env' : mergedConfigs[providerName].apiKeySource),
                 baseUrl: providerData.baseUrl || mergedConfigs[providerName].baseUrl,
                 defaultModel: providerData.defaultModel || mergedConfigs[providerName].defaultModel,
                 enabledModels: providerData.enabledModels || mergedConfigs[providerName].enabledModels,
@@ -910,7 +913,7 @@ const ProviderSettings: React.FC<ProviderSettingsProps> = ({ open, onClose, embe
                       size="small"
                       startIcon={<TestIcon />}
                       onClick={() => testConnection(provider)}
-                      disabled={testing[provider] || !config?.apiKey}
+                      disabled={testing[provider] || !(config?.apiKey || config?.hasApiKey)}
                       sx={{
                         borderColor: 'var(--primary-color)',
                         color: 'var(--primary-color)',
@@ -1129,7 +1132,7 @@ const ProviderSettings: React.FC<ProviderSettingsProps> = ({ open, onClose, embe
                       size="small"
                       startIcon={<TestIcon />}
                       onClick={() => testConnection(provider)}
-                      disabled={testing[provider] || !config?.apiKey}
+                      disabled={testing[provider] || !(config?.apiKey || config?.hasApiKey)}
                       sx={{
                         borderColor: 'var(--primary-color)',
                         color: 'var(--primary-color)',
@@ -1342,7 +1345,7 @@ const ProviderSettings: React.FC<ProviderSettingsProps> = ({ open, onClose, embe
                       size="small"
                       startIcon={<TestIcon />}
                       onClick={() => testConnection(provider)}
-                      disabled={testing[provider] || !config?.apiKey}
+                      disabled={testing[provider] || !(config?.apiKey || config?.hasApiKey)}
                       sx={{
                         borderColor: 'var(--primary-color)',
                         color: 'var(--primary-color)',
@@ -1474,7 +1477,7 @@ const ProviderSettings: React.FC<ProviderSettingsProps> = ({ open, onClose, embe
                       size="small"
                       startIcon={<TestIcon />}
                       onClick={() => testConnection(provider)}
-                      disabled={testing[provider] || !config?.apiKey}
+                      disabled={testing[provider] || !(config?.apiKey || config?.hasApiKey)}
                       sx={{
                         borderColor: 'var(--primary-color)',
                         color: 'var(--primary-color)',

@@ -21,8 +21,6 @@ import {
 import ProviderSettings from './ProviderSettings';
 import InterfaceSettings from './InterfaceSettings';
 import PrivacySettings from './PrivacySettings';
-import configManager from '../../services/ConfigManager';
-
 
 interface UserSettingsProps {
   open: boolean;
@@ -136,7 +134,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onClose }) => {
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Typography variant="h6" sx={{ color: '#00ffff' }}>
-              ⚙️ 用户设置
+              ⚙️ 平台管理设置
             </Typography>
             {hasChanges && (
               <Chip 
@@ -165,6 +163,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onClose }) => {
         </DialogTitle>
 
         <DialogContent sx={{ p: 0 }}>
+          <Alert
+            severity="info"
+            sx={{
+              m: 3,
+              backgroundColor: 'rgba(0, 255, 255, 0.08)',
+              color: '#d8ffff',
+              border: '1px solid rgba(0, 255, 255, 0.2)'
+            }}
+          >
+            当前入口用于平台内部 provider 配置、模型启停和调试维护。终端用户侧的自带密钥与消费模式，不应继续复用这一页。
+          </Alert>
+
           <Tabs 
             value={currentTab} 
             onChange={handleTabChange}
@@ -181,7 +191,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onClose }) => {
               }
             }}
           >
-            <Tab label="🤖 AI模型" />
+            <Tab label="🤖 Provider与模型" />
             <Tab label="🎨 界面设置" />
             <Tab label="🔒 隐私设置" />
           </Tabs>
@@ -216,7 +226,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onClose }) => {
           alignItems: 'center'
         }}>
           <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-            设置会自动保存到本地和云端
+            当前页仅用于平台内部配置与维护
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button 

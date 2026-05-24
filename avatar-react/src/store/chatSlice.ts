@@ -219,7 +219,7 @@ const initialState = {
   },
   
   // Provider相关状态
-  selectedProvider: 'openrouter', // 默认选择OpenRouter
+  selectedProvider: 'auto', // 默认走服务端自动路由
   selectedModel: '', // 选择的模型
   availableProviders: [],
   providersLoading: false,

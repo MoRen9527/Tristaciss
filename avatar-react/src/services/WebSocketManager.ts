@@ -42,7 +42,7 @@ class WebSocketManager {
 
   private getWebSocketUrl(): string {
     // 获取当前的API基础URL
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://test.trimetaverse.io/api';
+    const apiUrl = process.env.REACT_APP_API_URL || `${window.location.origin}/api`;
     const baseUrl = apiUrl.replace(/\/api\/?$/, '');
     
     // 转换为WebSocket URL

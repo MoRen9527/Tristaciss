@@ -20,6 +20,8 @@ import {
   ModelStatusResponse
 } from '../types/config';
 
+const ENV_KEY_PLACEHOLDER = '__ENV_CONFIGURED__';
+
 class ConfigManager {
   public cache: Map<string, any>; // 改为 public 以允许外部访问
   private syncInterval: number;
@@ -62,9 +64,12 @@ class ConfigManager {
         const providers: ProviderConfigs = {};
         Object.entries(response.data.configs).forEach(([key, provider]) => {
           console.log(`🔄 ConfigManager处理提供商 ${key}:`, provider);
+          const hasApiKey = Boolean(provider.has_api_key || (provider.api_key && provider.api_key !== ENV_KEY_PLACEHOLDER));
           providers[key] = {
             enabled: provider.enabled || false,
-            apiKey: provider.api_key || '',
+            apiKey: provider.api_key && provider.api_key !== ENV_KEY_PLACEHOLDER ? provider.api_key : '',
+            hasApiKey,
+            apiKeySource: provider.api_key_source || (hasApiKey ? 'env' : 'unset'),
             baseUrl: provider.base_url || '',
             defaultModel: provider.default_model || '',
             enabledModels: provider.enabled_models || provider.models || [],
@@ -364,27 +369,24 @@ class ConfigManager {
   async getAvailableModels(): Promise<ModelInfo[]> {
     try {
       console.log('🔍 ConfigManager.getAvailableModels: 开始获取模型列表');
-      const response: ApiResponse<ModelStatusResponse> = await api.get('/api/providers/models/status');
+      const response: ApiResponse<ModelStatusResponse> = await api.get('/providers/models/status');
       console.log('🔍 ConfigManager.getAvailableModels: API响应:', response);
       
-      if (response && response.success && response.data) {
+      if (response && response.success && response.models) {
         const models: ModelInfo[] = [];
         
-        // 遍历所有提供商的模型状态
-        Object.entries(response.data).forEach(([providerKey, providerData]) => {
-          console.log(`🔍 处理提供商 ${providerKey}:`, providerData);
-          if (providerData.models && Array.isArray(providerData.models)) {
-            providerData.models.forEach(model => {
-              models.push({
-                id: `${providerKey}:${model.model_id}`,
-                name: model.model_id,
-                provider: providerKey,
-                displayName: `${this.getProviderDisplayName(providerKey)} - ${model.model_id}`,
-                status: model.status,
-                enabled: providerData.enabled && providerData.has_api_key
-              });
-            });
-          }
+        Object.entries(response.models).forEach(([modelKey, modelData]: [string, any]) => {
+          const providerKey = modelData.provider || modelKey.split(':', 1)[0];
+          const modelName = modelData.model || modelKey.split(':').slice(1).join(':');
+          console.log(`🔍 处理模型 ${modelKey}:`, modelData);
+          models.push({
+            id: modelKey,
+            name: modelName,
+            provider: providerKey,
+            displayName: `${this.getProviderDisplayName(providerKey)} - ${modelName}`,
+            status: modelData.status,
+            enabled: modelData.available !== false
+          });
         });
         
         console.log('🔍 ConfigManager.getAvailableModels: 解析的模型列表:', models);

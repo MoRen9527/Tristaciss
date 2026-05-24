@@ -109,9 +109,24 @@ const LoginPage: React.FC = () => {
                   textShadow: '0 0 10px rgba(0, 255, 255, 0.6)',
                 }}
               >
-                星球城市空间站
+                Tristaciss 平台管理控制台
               </Typography>
             </Box>
+
+            <Alert
+              severity="warning"
+              sx={{
+                mb: 2,
+                backgroundColor: 'rgba(255, 152, 0, 0.08)',
+                color: '#ffd54f',
+                border: '1px solid rgba(255, 152, 0, 0.35)',
+                '& .MuiAlert-icon': {
+                  color: '#ffd54f',
+                },
+              }}
+            >
+              当前入口用于平台管理与运维，不面向终端用户开放。
+            </Alert>
 
             {error && (
               <Alert 
@@ -251,7 +266,7 @@ const LoginPage: React.FC = () => {
                   },
                 }}
               >
-                {loading ? '登录中...' : '登录'}
+                {loading ? '登录中...' : '登录管理台'}
               </Button>
               
               {/* 测试账户按钮 */}
@@ -271,14 +286,14 @@ const LoginPage: React.FC = () => {
                   },
                 }}
               >
-                使用测试账户登录
+                使用管理测试账户登录
               </Button>
             </form>
 
             {/* 测试账户信息提示 */}
             <Box sx={{ mt: 3, p: 2, border: '1px solid rgba(57, 255, 20, 0.3)', borderRadius: 1 }}>
               <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
-                测试账户信息：
+                管理测试账户信息：
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
                 用户名: demo

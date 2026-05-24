@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import LoginPage from './pages/LoginPage';
 import ChatHistoryPage from './pages/ChatHistoryPage-TABLET-0BGCRCP5';
 import HomePage from './pages/HomePage';
@@ -12,11 +11,34 @@ import GameFiPage from './pages/GameFiPage';
 
 
 import SciFiDemo from './components/ui/SciFiDemo';
-import { RootState } from './store';
+import { checkAuth } from './store/authSlice';
+import { useAppDispatch, useAppSelector } from './hooks/redux';
 
 
 const App = () => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const [authResolved, setAuthResolved] = useState<boolean>(() => !localStorage.getItem('token'));
+
+  useEffect(() => {
+    if (!localStorage.getItem('token')) {
+      setAuthResolved(true);
+      return;
+    }
+
+    dispatch(checkAuth())
+      .finally(() => {
+        setAuthResolved(true);
+      });
+  }, [dispatch]);
+
+  if (!authResolved) {
+    return null;
+  }
+
+  const requireAuth = (element: React.ReactElement) => (
+    isAuthenticated ? element : <Navigate to="/login" replace />
+  );
 
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -27,16 +49,15 @@ const App = () => {
         />
         <Route 
           path="/chathistory" 
-          element={isAuthenticated ? <ChatHistoryPage /> : <Navigate to="/login" replace />} 
+          element={requireAuth(<ChatHistoryPage />)} 
         />
         <Route 
           path="/chat-only" 
-          element={<ChatOnlyPage /> } 
+          element={requireAuth(<ChatOnlyPage />)} 
         />
-        {/* 暂时用独立页面，后期需要判断是否登录 */}
         <Route 
           path="/dashboard-only" 
-          element={<DashboardOnlyPage />} 
+          element={requireAuth(<DashboardOnlyPage />)} 
         />
 
 
@@ -54,7 +75,7 @@ const App = () => {
         />
         <Route 
           path="/" 
-          element={isAuthenticated ? <HomePage /> : <Navigate to="/login" replace />} 
+          element={requireAuth(<HomePage />)} 
         />
       </Routes>
     </Router>

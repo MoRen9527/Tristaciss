@@ -101,10 +101,11 @@ export const chatAPI = {
   sendStreamMessage: async (message: string, onChunk: (data: any) => void, options: { provider?: string; config?: any; model?: string } = {}) => {
     try {
       const { provider, config, model } = options;
+      const useAutoRouting = !provider || provider === 'auto';
       
       // 如果没有配置信息，尝试从localStorage获取
       let providerConfig = config;
-      if (!providerConfig && provider) {
+      if (!providerConfig && provider && !useAutoRouting) {
         // 首先尝试从provider_settings获取
         const savedSettings = localStorage.getItem('provider_settings');
         if (savedSettings) {
@@ -133,7 +134,7 @@ export const chatAPI = {
         }
       }
       
-      if (!providerConfig) {
+      if (!providerConfig && !useAutoRouting) {
         throw new Error('缺少provider配置信息，请先在设置中配置provider');
       }
 
@@ -147,7 +148,7 @@ export const chatAPI = {
       const url = `${baseUrl}/api/chat/stream`;
       
       console.log('发送流式请求到:', url);
-      console.log('请求配置:', { provider, model, config: providerConfig });
+      console.log('请求配置:', { provider: useAutoRouting ? 'auto' : provider, model, config: providerConfig });
       
       const response = await fetch(url, {
         method: 'POST',
@@ -159,7 +160,7 @@ export const chatAPI = {
         },
         body: JSON.stringify({
           query: message,
-          provider: provider || 'openrouter',
+          provider: useAutoRouting ? 'auto' : (provider || 'openrouter'),
           config: providerConfig
         }),
         credentials: 'include'
@@ -413,7 +414,7 @@ export const dashboardAPI = {
 // 认证相关API
 export const authAPI = {
   // 登录
-  login: (credentials) => {
+   login: (credentials) => {
     return api.post('/login', credentials);
   },
   

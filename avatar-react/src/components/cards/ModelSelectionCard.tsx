@@ -167,7 +167,7 @@ const ModelSelectionCard: React.FC<ModelSelectionCardProps> = ({ onConfirm, onCl
         // 为了演示功能，我们假设一些提供商是启用的
         const isEnabledForDemo = ['deepseek', 'glm', 'openai'].includes(providerKey);
         
-        if (isEnabledForDemo || (provider.enabled && provider.apiKey)) {
+        if (isEnabledForDemo || (provider.enabled && (provider.apiKey || provider.hasApiKey))) {
           // 获取该提供商的模型列表
           let modelList: string[] = [];
           if (provider.enabledModels && Array.isArray(provider.enabledModels)) {

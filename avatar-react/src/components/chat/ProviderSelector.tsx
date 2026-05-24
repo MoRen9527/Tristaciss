@@ -87,6 +87,11 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({
       } else {
         // 如果没有预定义模型，提供默认模型
         switch (selectedProvider) {
+          case 'auto':
+            models = [
+              { id: 'auto', name: 'Auto Route', description: 'Let the backend route to the best available model' }
+            ];
+            break;
           case 'openai':
             models = [
               { id: 'gpt-4', name: 'GPT-4', description: 'OpenAI GPT-4' },
@@ -187,6 +192,7 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({
     if (!Array.isArray(providers) || providers.length === 0) {
       // 如果providers还没加载，显示友好的名称
       const defaultProviderNames: Record<string, string> = {
+        'auto': 'Auto Router',
         'openai': 'OpenAI',
         'deepseek': 'DeepSeek',
         'glm': '智谱GLM'
@@ -213,6 +219,7 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({
     if (!provider) {
       // 如果找不到provider，但有selected值，显示友好名称
       const defaultProviderNames: Record<string, string> = {
+        'auto': 'Auto Router',
         'openai': 'OpenAI',
         'deepseek': 'DeepSeek',
         'glm': '智谱GLM'
