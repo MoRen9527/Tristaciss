@@ -1,4 +1,4 @@
-# 依赖目录
+﻿# 依赖目录
 node_modules/
 .venv/
 venv/
@@ -67,3 +67,7 @@ config_backups/
 # 缓存
 cache/
 .cache/
+.codegraph/
+.cursor/
+vendor/
+.env.*
