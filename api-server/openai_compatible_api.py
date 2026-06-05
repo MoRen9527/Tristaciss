@@ -10,6 +10,7 @@ from openai_ingress_models import (
     OpenAIChatCompletionsResponse,
     OpenAIErrorDetail,
     OpenAIErrorResponse,
+    OpenAIModelsResponse,
 )
 from route_resolver import RouteResolutionError, RouteResolver
 from providers import ProviderManager
@@ -29,6 +30,15 @@ def get_chat_completion_service() -> ChatCompletionService:
     if _chat_completion_service is None:
         raise RuntimeError("OpenAI-compatible router has not been configured")
     return _chat_completion_service
+
+
+@router.get("/models", response_model=OpenAIModelsResponse)
+async def list_models():
+    service = get_chat_completion_service()
+    try:
+        return await service.list_models()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @router.post(
@@ -59,7 +69,7 @@ async def _stream_chat_completions(
 ):
     try:
         async for chunk in service.stream_completion(request):
-            yield f"data: {chunk.json(by_alias=True, exclude_none=True)}\n\n"
+            yield f"data: {chunk.model_dump_json(by_alias=True, exclude_none=True)}\n\n"
         yield "data: [DONE]\n\n"
     except RouteResolutionError as exc:
         error = OpenAIErrorResponse(
@@ -70,7 +80,7 @@ async def _stream_chat_completions(
                 code="tmv_route_not_found",
             )
         )
-        yield f"data: {json.dumps(error.dict(by_alias=True, exclude_none=True), ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps(error.model_dump(by_alias=True, exclude_none=True), ensure_ascii=False)}\n\n"
     except FeatureNotReadyError as exc:
         error = OpenAIErrorResponse(
             error=OpenAIErrorDetail(
@@ -80,4 +90,4 @@ async def _stream_chat_completions(
                 code="tmv_feature_not_enabled",
             )
         )
-        yield f"data: {json.dumps(error.dict(by_alias=True, exclude_none=True), ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps(error.model_dump(by_alias=True, exclude_none=True), ensure_ascii=False)}\n\n"

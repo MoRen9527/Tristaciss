@@ -11,6 +11,8 @@ from openai_ingress_models import (
     OpenAIChatCompletionChunk,
     OpenAIChatCompletionsRequest,
     OpenAIChatCompletionsResponse,
+    OpenAIModelCard,
+    OpenAIModelsResponse,
     TmvRouteMeta,
     UsageStats,
 )
@@ -105,6 +107,33 @@ class ChatCompletionService:
             "resolved_tag": resolved_route.resolved_tag,
             "resolved_model_tag": resolved_route.resolved_model_tag,
         }
+
+    async def list_models(self) -> OpenAIModelsResponse:
+        supported_models = await self._provider_manager.get_all_supported_models()
+        cards: list[OpenAIModelCard] = []
+        seen: set[tuple[str, str]] = set()
+
+        for provider_name, models in supported_models.items():
+            for model in models:
+                key = (model.id, provider_name)
+                if key in seen:
+                    continue
+                seen.add(key)
+                cards.append(_build_model_card(model_id=model.id, owned_by=provider_name))
+
+        for provider_name in self._provider_manager.provider_names:
+            provider = self._provider_manager.get_provider(provider_name)
+            default_model = provider.config.default_model if provider else ""
+            if not default_model:
+                continue
+            key = (default_model, provider_name)
+            if key in seen:
+                continue
+            seen.add(key)
+            cards.append(_build_model_card(model_id=default_model, owned_by=provider_name))
+
+        cards.sort(key=lambda item: (item.owned_by, item.id))
+        return OpenAIModelsResponse(data=cards)
 
     @staticmethod
     def normalize_messages(request: OpenAIChatCompletionsRequest) -> List[Dict[str, str]]:
@@ -210,3 +239,7 @@ def build_completion_response(
             routePolicy=resolved_route.route_policy,
         ),
     )
+
+
+def _build_model_card(*, model_id: str, owned_by: str) -> OpenAIModelCard:
+    return OpenAIModelCard(id=model_id, owned_by=owned_by)

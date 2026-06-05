@@ -130,6 +130,19 @@ class OpenAIChatCompletionChunk(StrictModel):
     tmv: Optional[TmvRouteMeta] = None
 
 
+class OpenAIModelCard(StrictModel):
+    id: str
+    object: Literal["model"] = "model"
+    created: int = Field(default=0, ge=0)
+    owned_by: str = Field(..., alias="owned_by")
+    permission: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class OpenAIModelsResponse(StrictModel):
+    object: Literal["list"] = "list"
+    data: List[OpenAIModelCard]
+
+
 class OpenAIErrorDetail(StrictModel):
     message: str
     type: str
