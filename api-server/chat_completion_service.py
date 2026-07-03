@@ -23,6 +23,26 @@ class FeatureNotReadyError(Exception):
     pass
 
 
+class ProviderFallbackError(Exception):
+    def __init__(
+        self,
+        message: str,
+        *,
+        attempted_routes: list[str],
+        last_error: Optional[str] = None,
+    ):
+        self.attempted_routes = attempted_routes
+        self.last_error = last_error
+
+        details = message
+        if attempted_routes:
+            details = f"{details} Tried routes: {', '.join(attempted_routes)}"
+        if last_error:
+            details = f"{details}. Last error: {last_error}"
+
+        super().__init__(details)
+
+
 class ChatCompletionService:
     def __init__(self, route_resolver: RouteResolver, provider_manager: ProviderManager):
         self._route_resolver = route_resolver
@@ -31,10 +51,10 @@ class ChatCompletionService:
     async def create_completion(self, request: OpenAIChatCompletionsRequest) -> OpenAIChatCompletionsResponse:
         resolved_route = self._route_resolver.resolve_chat_completion(request)
         request_id = str(uuid.uuid4())
-        content, usage = await self._execute_non_stream(request, resolved_route)
+        content, usage, execution_route = await self._execute_non_stream(request, resolved_route)
         return build_completion_response(
             request_id=request_id,
-            resolved_route=resolved_route,
+            resolved_route=execution_route,
             content=content,
             usage=usage,
         )
@@ -42,59 +62,87 @@ class ChatCompletionService:
     async def stream_completion(self, request: OpenAIChatCompletionsRequest) -> AsyncGenerator[OpenAIChatCompletionChunk, None]:
         resolved_route = self._route_resolver.resolve_chat_completion(request)
         request_id = str(uuid.uuid4())
-        first_chunk = self._build_role_chunk(request_id=request_id, resolved_route=resolved_route)
-        yield first_chunk
-        provider = self._provider_manager.get_provider(resolved_route.provider)
-        if not provider:
-            raise FeatureNotReadyError(
-                f"No runtime provider registered for {resolved_route.provider}:{resolved_route.model}"
-            )
-
         normalized_messages = self.normalize_messages(request)
-        chunk_index = 1
-        async for chunk in provider.chat_completion(
-            messages=normalized_messages,
-            model=resolved_route.model,
-            stream=True,
-            temperature=request.temperature or 0.7,
-            max_tokens=request.max_tokens or 2000,
-        ):
-            if chunk.content:
+        attempted_routes: list[str] = []
+        last_error: Optional[str] = None
+
+        for execution_route in self._iter_execution_routes(resolved_route):
+            attempted_routes.append(self._route_label(execution_route))
+            provider = self._provider_manager.get_provider(execution_route.provider)
+            if not provider:
+                last_error = (
+                    f"No runtime provider registered for {execution_route.provider}:{execution_route.model}"
+                )
+                continue
+
+            emitted_role = False
+            emitted_content = False
+            try:
+                async for chunk in provider.chat_completion(
+                    messages=normalized_messages,
+                    model=execution_route.model,
+                    stream=True,
+                    temperature=request.temperature or 0.7,
+                    max_tokens=request.max_tokens or 2000,
+                ):
+                    if chunk.content:
+                        if not emitted_role:
+                            yield self._build_role_chunk(request_id=request_id, resolved_route=execution_route)
+                            emitted_role = True
+                        yield OpenAIChatCompletionChunk(
+                            id=request_id,
+                            created=int(time.time()),
+                            model=execution_route.model,
+                            choices=[
+                                ChunkChoice(
+                                    index=0,
+                                    delta=DeltaMessage(content=chunk.content),
+                                    finish_reason=None,
+                                )
+                            ],
+                            tmv=TmvRouteMeta(
+                                requestId=request_id,
+                                resolvedTag=execution_route.resolved_tag,
+                                resolvedModelTag=execution_route.resolved_model_tag,
+                                resolvedProvider=execution_route.provider,
+                                resolvedModel=execution_route.model,
+                                routePolicy=execution_route.route_policy,
+                            ),
+                        )
+                        emitted_content = True
+
+                if not emitted_role:
+                    yield self._build_role_chunk(request_id=request_id, resolved_route=execution_route)
+
                 yield OpenAIChatCompletionChunk(
                     id=request_id,
                     created=int(time.time()),
-                    model=resolved_route.model,
-                    choices=[
-                        ChunkChoice(
-                            index=0,
-                            delta=DeltaMessage(content=chunk.content),
-                            finish_reason=None,
-                        )
-                    ],
+                    model=execution_route.model,
+                    choices=[ChunkChoice(index=0, delta=DeltaMessage(), finish_reason="stop")],
                     tmv=TmvRouteMeta(
                         requestId=request_id,
-                        resolvedTag=resolved_route.resolved_tag,
-                        resolvedModelTag=resolved_route.resolved_model_tag,
-                        resolvedProvider=resolved_route.provider,
-                        resolvedModel=resolved_route.model,
-                        routePolicy=resolved_route.route_policy,
+                        resolvedTag=execution_route.resolved_tag,
+                        resolvedModelTag=execution_route.resolved_model_tag,
+                        resolvedProvider=execution_route.provider,
+                        resolvedModel=execution_route.model,
+                        routePolicy=execution_route.route_policy,
                     ),
                 )
-                chunk_index += 1
+                return
+            except ProviderError as exc:
+                last_error = str(exc)
+                if emitted_content:
+                    raise ProviderFallbackError(
+                        "Provider failed after streaming had already started",
+                        attempted_routes=attempted_routes,
+                        last_error=last_error,
+                    ) from exc
+                continue
 
-        yield OpenAIChatCompletionChunk(
-            id=request_id,
-            created=int(time.time()),
-            model=resolved_route.model,
-            choices=[ChunkChoice(index=0, delta=DeltaMessage(), finish_reason="stop")],
-            tmv=TmvRouteMeta(
-                requestId=request_id,
-                resolvedTag=resolved_route.resolved_tag,
-                resolvedModelTag=resolved_route.resolved_model_tag,
-                resolvedProvider=resolved_route.provider,
-                resolvedModel=resolved_route.model,
-                routePolicy=resolved_route.route_policy,
-            ),
+        raise ProviderFallbackError(
+            "No OpenAI-compatible execution route completed successfully",
+            attempted_routes=attempted_routes,
+            last_error=last_error,
         )
 
     def build_execution_plan(self, request: OpenAIChatCompletionsRequest) -> Dict[str, Any]:
@@ -143,34 +191,84 @@ class ChatCompletionService:
         self,
         request: OpenAIChatCompletionsRequest,
         resolved_route: ResolvedRoute,
-    ) -> tuple[str, Optional[Dict[str, int]]]:
-        provider = self._provider_manager.get_provider(resolved_route.provider)
-        if not provider:
-            raise FeatureNotReadyError(f"No runtime provider registered for {resolved_route.provider}")
-
-        response_content = ""
-        usage_info: Optional[Dict[str, int]] = None
+    ) -> tuple[str, Optional[Dict[str, int]], ResolvedRoute]:
         normalized_messages = self.normalize_messages(request)
+        attempted_routes: list[str] = []
+        last_error: Optional[str] = None
 
-        try:
-            async for chunk in provider.chat_completion(
-                messages=normalized_messages,
-                model=resolved_route.model,
-                stream=False,
-                temperature=request.temperature or 0.7,
-                max_tokens=request.max_tokens or 2000,
-            ):
-                if chunk.content:
-                    response_content += chunk.content
-                if chunk.usage:
-                    usage_info = chunk.usage
-        except ProviderError as exc:
-            raise RuntimeError(str(exc)) from exc
+        for execution_route in self._iter_execution_routes(resolved_route):
+            attempted_routes.append(self._route_label(execution_route))
+            provider = self._provider_manager.get_provider(execution_route.provider)
+            if not provider:
+                last_error = f"No runtime provider registered for {execution_route.provider}"
+                continue
 
-        if not response_content:
-            response_content = self._build_placeholder_content(request, resolved_route)
+            response_content = ""
+            usage_info: Optional[Dict[str, int]] = None
+            try:
+                async for chunk in provider.chat_completion(
+                    messages=normalized_messages,
+                    model=execution_route.model,
+                    stream=False,
+                    temperature=request.temperature or 0.7,
+                    max_tokens=request.max_tokens or 2000,
+                ):
+                    if chunk.content:
+                        response_content += chunk.content
+                    if chunk.usage:
+                        usage_info = chunk.usage
+            except ProviderError as exc:
+                last_error = str(exc)
+                if response_content:
+                    raise ProviderFallbackError(
+                        "Provider failed after returning a partial non-stream response",
+                        attempted_routes=attempted_routes,
+                        last_error=last_error,
+                    ) from exc
+                continue
 
-        return response_content, usage_info
+            if not response_content:
+                response_content = self._build_placeholder_content(request, execution_route)
+
+            return response_content, usage_info, execution_route
+
+        raise ProviderFallbackError(
+            "No OpenAI-compatible execution route completed successfully",
+            attempted_routes=attempted_routes,
+            last_error=last_error,
+        )
+
+    @staticmethod
+    def _route_label(route: ResolvedRoute) -> str:
+        return f"{route.provider}:{route.model}"
+
+    @staticmethod
+    def _iter_execution_routes(resolved_route: ResolvedRoute) -> List[ResolvedRoute]:
+        execution_routes: List[ResolvedRoute] = []
+        seen: set[tuple[str, str]] = set()
+
+        candidates = resolved_route.candidates or []
+        for candidate in candidates:
+            key = (candidate.provider, candidate.model)
+            if key in seen:
+                continue
+            seen.add(key)
+            execution_routes.append(
+                ResolvedRoute(
+                    provider=candidate.provider,
+                    model=candidate.model,
+                    route_policy=resolved_route.route_policy,
+                    resolved_tag=resolved_route.resolved_tag,
+                    resolved_model_tag=resolved_route.resolved_model_tag,
+                    candidates=resolved_route.candidates,
+                )
+            )
+
+        default_key = (resolved_route.provider, resolved_route.model)
+        if default_key not in seen:
+            execution_routes.append(resolved_route)
+
+        return execution_routes
 
     @staticmethod
     def _build_placeholder_content(

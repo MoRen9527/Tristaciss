@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from chat_completion_service import ChatCompletionService, FeatureNotReadyError
+from chat_completion_service import ChatCompletionService, FeatureNotReadyError, ProviderFallbackError
 from openai_ingress_models import (
     OpenAIChatCompletionsRequest,
     OpenAIChatCompletionsResponse,
@@ -55,6 +55,8 @@ async def chat_completions(request: OpenAIChatCompletionsRequest):
                 media_type="text/event-stream",
             )
         return await service.create_completion(request)
+    except ProviderFallbackError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except RouteResolutionError as exc:
@@ -88,6 +90,16 @@ async def _stream_chat_completions(
                 type="feature_not_ready",
                 param="stream",
                 code="tmv_feature_not_enabled",
+            )
+        )
+        yield f"data: {json.dumps(error.model_dump(by_alias=True, exclude_none=True), ensure_ascii=False)}\n\n"
+    except ProviderFallbackError as exc:
+        error = OpenAIErrorResponse(
+            error=OpenAIErrorDetail(
+                message=str(exc),
+                type="provider_unavailable",
+                param="routeMeta",
+                code="tmv_provider_unavailable",
             )
         )
         yield f"data: {json.dumps(error.model_dump(by_alias=True, exclude_none=True), ensure_ascii=False)}\n\n"

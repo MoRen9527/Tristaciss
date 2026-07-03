@@ -1,6 +1,9 @@
 import asyncio
+import base64
 import json
 import logging
+import hashlib
+import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -10,8 +13,9 @@ import os
 import tempfile
 import subprocess
 from datetime import datetime
+from urllib.parse import urlencode
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from config_api import router as config_router
 from exchange_rate_api import router as exchange_rate_router
@@ -21,7 +25,8 @@ from openai_compatible_api import (
     get_chat_completion_service,
     router as openai_compatible_router,
 )
-from fastapi.responses import StreamingResponse, JSONResponse
+from legacy_chat_stream_adapter import LegacyChatStreamAdapter, legacy_event_to_sse
+from fastapi.responses import StreamingResponse, JSONResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import uvicorn
@@ -41,7 +46,7 @@ from providers import (
     ProviderManager, ProviderConfig, ProviderType, StreamChunk,
     ProviderError, ProviderConnectionError, ProviderAuthenticationError
 )
-from openai_ingress_models import OpenAIChatCompletionsRequest, OpenAIChatMessage
+from openai_ingress_models import LegacyChatStreamRequest, OpenAIChatCompletionsRequest, OpenAIChatMessage
 
 # 导入配置管理器
 from config_manager import config_manager
@@ -83,6 +88,52 @@ else:
 
 # 添加HTTPBearer安全实例
 security = HTTPBearer()
+
+DEV_OIDC_CLIENT_ID = "tristaciss-avatar-react"
+DEV_OIDC_CODE_TTL_SECONDS = 300
+DEV_OIDC_DEFAULT_USER = {
+    "id": "oidc-demo-user",
+    "username": "demo.user",
+    "email": "demo.user@example.com",
+    "role": "demo"
+}
+dev_oidc_auth_codes: Dict[str, Dict[str, Any]] = {}
+dev_oidc_access_tokens: Dict[str, Dict[str, Any]] = {}
+
+
+def _create_pkce_challenge(code_verifier: str) -> str:
+    digest = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+    return base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+
+
+def _build_demo_user(username: Optional[str] = None) -> Dict[str, Any]:
+    if not username:
+        return dict(DEV_OIDC_DEFAULT_USER)
+
+    normalized = username.strip() or DEV_OIDC_DEFAULT_USER["username"]
+    return {
+        "id": f"oidc-{normalized}",
+        "username": normalized,
+        "email": f"{normalized}@example.com",
+        "role": "demo"
+    }
+
+
+def _get_dev_user_from_token(token: str) -> Dict[str, Any]:
+    token_payload = dev_oidc_access_tokens.get(token)
+    if token_payload:
+        return dict(token_payload["user"])
+    return {"user_id": "test_user", "username": "test"}
+
+
+def _prune_expired_oidc_codes() -> None:
+    now = time.time()
+    expired_codes = [
+        code for code, payload in dev_oidc_auth_codes.items()
+        if payload["expires_at"] <= now
+    ]
+    for code in expired_codes:
+        dev_oidc_auth_codes.pop(code, None)
 
 # Pydantic 模型定义
 class ChatMessage(BaseModel):
@@ -905,9 +956,90 @@ cline_service = ClineService()
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """获取当前用户信息"""
     token = credentials.credentials
-    # 这里应该实现真正的token验证逻辑
-    # 暂时返回模拟用户信息
-    return {"user_id": "test_user", "username": "test"}
+    return _get_dev_user_from_token(token)
+
+
+@app.get("/oauth/authorize")
+async def oauth_authorize(
+    response_type: str,
+    client_id: str,
+    redirect_uri: str,
+    scope: Optional[str] = None,
+    state: Optional[str] = None,
+    code_challenge: Optional[str] = None,
+    code_challenge_method: Optional[str] = None,
+    login_hint: Optional[str] = None,
+):
+    """本地开发态 OIDC 授权端点。"""
+    if response_type != "code":
+        raise HTTPException(status_code=400, detail="仅支持 authorization_code")
+    if client_id != DEV_OIDC_CLIENT_ID:
+        raise HTTPException(status_code=400, detail="未知 client_id")
+    if not redirect_uri:
+        raise HTTPException(status_code=400, detail="缺少 redirect_uri")
+    if code_challenge_method != "S256" or not code_challenge:
+        raise HTTPException(status_code=400, detail="需要 S256 PKCE 参数")
+
+    _prune_expired_oidc_codes()
+    auth_code = secrets.token_urlsafe(24)
+    dev_oidc_auth_codes[auth_code] = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "scope": scope or "openid profile email",
+        "code_challenge": code_challenge,
+        "user": _build_demo_user(login_hint),
+        "expires_at": time.time() + DEV_OIDC_CODE_TTL_SECONDS,
+    }
+
+    redirect_params = {"code": auth_code}
+    if state:
+        redirect_params["state"] = state
+
+    separator = "&" if "?" in redirect_uri else "?"
+    redirect_target = f"{redirect_uri}{separator}{urlencode(redirect_params)}"
+    return RedirectResponse(url=redirect_target, status_code=302)
+
+
+@app.post("/oauth/token")
+async def oauth_token(
+    grant_type: str = Form(...),
+    code: str = Form(...),
+    redirect_uri: str = Form(...),
+    client_id: str = Form(...),
+    code_verifier: str = Form(...),
+):
+    """本地开发态 OIDC token 交换端点。"""
+    if grant_type != "authorization_code":
+        raise HTTPException(status_code=400, detail="仅支持 authorization_code")
+    if client_id != DEV_OIDC_CLIENT_ID:
+        raise HTTPException(status_code=400, detail="未知 client_id")
+
+    _prune_expired_oidc_codes()
+    code_payload = dev_oidc_auth_codes.pop(code, None)
+    if not code_payload:
+        raise HTTPException(status_code=400, detail="授权码无效或已过期")
+    if code_payload["redirect_uri"] != redirect_uri:
+        raise HTTPException(status_code=400, detail="redirect_uri 不匹配")
+    if code_payload["client_id"] != client_id:
+        raise HTTPException(status_code=400, detail="client_id 不匹配")
+    if _create_pkce_challenge(code_verifier) != code_payload["code_challenge"]:
+        raise HTTPException(status_code=400, detail="PKCE 校验失败")
+
+    access_token = secrets.token_urlsafe(32)
+    id_token = secrets.token_urlsafe(32)
+    dev_oidc_access_tokens[access_token] = {
+        "user": dict(code_payload["user"]),
+        "scope": code_payload["scope"],
+        "issued_at": time.time(),
+    }
+
+    return {
+        "access_token": access_token,
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "scope": code_payload["scope"],
+        "id_token": id_token,
+    }
 
 # API路由
 @app.get("/")
@@ -994,6 +1126,22 @@ async def register(user_data: UserRegister):
     except Exception as e:
         logger.error(f"注册失败: {e}")
         raise HTTPException(status_code=500, detail="注册服务异常")
+
+
+@app.get("/api/user")
+async def get_current_user_profile(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """返回当前 bearer token 对应的用户信息。"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="未认证")
+    return {
+        "success": True,
+        "user": {
+            "id": current_user.get("id") or current_user.get("user_id") or "test_user",
+            "username": current_user.get("username", "test"),
+            "email": current_user.get("email"),
+            "role": current_user.get("role", "demo")
+        }
+    }
 
 @app.get("/api/providers")
 async def get_providers():
@@ -1726,6 +1874,7 @@ async def stream_chat_with_config(request: dict):
         query = request.get('query', '')
         chat_mode = request.get('chat_mode', 'single')  # 'single' 或 'group'
         provider_name = request.get('provider', 'openrouter')
+        model_name = request.get('model')
         provider_config = request.get('config', {})
         group_settings = request.get('group_settings', {})
         
@@ -1736,7 +1885,32 @@ async def stream_chat_with_config(request: dict):
         
         # 单聊模式
         if chat_mode == 'single':
-            return await handle_single_chat(query, provider_name, provider_config or {})
+            logger.info(
+                "legacy_single_chat_adapter provider=%s model=%s config_supplied=%s",
+                provider_name,
+                model_name or 'auto',
+                bool(provider_config),
+            )
+            legacy_request = LegacyChatStreamRequest(
+                query=query,
+                provider=provider_name,
+                model=model_name,
+                config=provider_config or {},
+                chat_mode='single',
+            )
+            adapter = LegacyChatStreamAdapter(get_chat_completion_service())
+
+            async def generate_legacy_single_chat():
+                async for event in adapter.stream_legacy_events(legacy_request):
+                    yield legacy_event_to_sse(event)
+
+            return StreamingResponse(generate_legacy_single_chat(), media_type='text/event-stream', headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': 'true'
+            })
         
         # 群聊模式
         elif chat_mode == 'group':

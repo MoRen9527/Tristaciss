@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from openai_compatible_api import configure_openai_compatible_router, router
+from providers import ProviderError
 from providers.base import ModelInfo, ProviderConfig, ProviderType, StreamChunk
 
 
@@ -14,8 +15,12 @@ from providers.base import ModelInfo, ProviderConfig, ProviderType, StreamChunk
 class _FakeProvider:
     config: ProviderConfig
     supported_models: list[ModelInfo]
+    fail_non_stream: bool = False
 
     async def chat_completion(self, *, stream: bool = True, model: str, **_: object):
+        if self.fail_non_stream and not stream:
+            raise ProviderError("provider unavailable", self.config.provider_type.value)
+
         if stream:
             yield StreamChunk(
                 content="hello",
@@ -50,7 +55,7 @@ class _FakeProvider:
 
 
 class _FakeProviderManager:
-    def __init__(self):
+    def __init__(self, *, fail_non_stream: bool = False):
         glm_model = ModelInfo(
             id="glm-4.5",
             name="GLM-4.5",
@@ -71,6 +76,7 @@ class _FakeProviderManager:
                     default_model="glm-4.5",
                 ),
                 supported_models=[glm_model],
+                fail_non_stream=fail_non_stream,
             )
         }
 
@@ -92,9 +98,9 @@ class _FakeProviderManager:
         }
 
 
-def _build_client() -> TestClient:
+def _build_client(*, fail_non_stream: bool = False) -> TestClient:
     app = FastAPI()
-    configure_openai_compatible_router(_FakeProviderManager())
+    configure_openai_compatible_router(_FakeProviderManager(fail_non_stream=fail_non_stream))
     app.include_router(router)
     return TestClient(app)
 
@@ -167,3 +173,52 @@ def test_chat_completions_stream_returns_sse_chunks_and_done_marker():
     assert second_chunk["choices"][0]["delta"]["content"] == "hello"
     assert third_chunk["choices"][0]["delta"]["content"] == " world"
     assert final_chunk["choices"][0]["finish_reason"] == "stop"
+
+
+def test_chat_completions_returns_controlled_502_when_no_candidate_succeeds():
+    client = _build_client(fail_non_stream=True)
+
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "messages": [{"role": "user", "content": "hello"}],
+            "workspace": {"language": "python"},
+        },
+    )
+
+    assert response.status_code == 502
+    assert "No OpenAI-compatible execution route completed successfully" in response.json()["detail"]
+
+
+def test_chat_completions_rejects_non_interactive_task_type():
+    client = _build_client()
+
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "messages": [{"role": "user", "content": "hello"}],
+            "workspace": {"language": "python"},
+            "taskHint": {"taskType": "workflow_task", "syncMode": "async"},
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert any("Phase C only supports interactive_chat requests" in str(item) for item in detail)
+
+
+def test_chat_completions_rejects_extra_request_fields():
+    client = _build_client()
+
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "messages": [{"role": "user", "content": "hello"}],
+            "workspace": {"language": "python"},
+            "unexpectedField": "boom",
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert any(item.get("type") == "extra_forbidden" for item in detail)

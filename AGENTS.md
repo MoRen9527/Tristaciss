@@ -6,8 +6,8 @@
 ## Project Overview
 
 - Tristaciss 是一个 AI 应用生产制造平台，包含数字分身系统和科幻主题 UI。
-- 本模块当前包含三部分：
-  - `avatar-react/`：当前 React 前端实现；本轮深挖完成后计划平滑迁移到 `Triavatar`
+- 本模块当前包含两部分：
+  - `avatar-react/`：⚠️ **已废弃** — 历史 React 前端实现；前端的 canonical 真源已迁移到独立模块 `TriAvatar/`。本目录仅保留作为历史参考，不新增功能。
   - `api-server/`：当前 FastAPI 后端真源
   - 遗留 Vue 演示路径 `temp/digital-avatar-app/` 当前已不在仓内；任何仍提到它或 `digital-avatar-react/` 的文档都属于历史口径
 

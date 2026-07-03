@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "tridev-qa-package",
+  "caseId": "IPD-20260527-034923",
+  "runId": "ipd-ipd-20260527-034923",
+  "stageKey": "qa",
+  "phaseKey": "QA",
+  "module": "TriStaciss",
+  "ownerRole": "ChiefTechnologyOfficer",
+  "generatedOn": "2026-06-10",
+  "summary": "TriStaciss minimal OpenAI-compatible gateway MVP slice passed focused QA regression for the current local Copilot-host boundary.",
+  "qualityScore": 86,
+  "releaseReadiness": {
+    "status": "approved-for-deployment-stage",
+    "deploymentAllowed": true,
+    "scope": "Current Copilot-host local MVP slice only",
+    "rationale": [
+      "Focused gateway regression suite passed with 15 tests and no functional failures.",
+      "Core gateway implementation files compiled successfully via compileall.",
+      "Verify and redteam evidence are already attached for the same active case.",
+      "Residual risks remain at auth, quota, tenant policy, and broader platform layers, but they do not block progression to the next IPD stage for this slice."
+    ]
+  },
+  "qaAssessment": {
+    "testExecution": {
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest tests\\integration\\test_openai_compatible_router.py tests\\unit\\test_chat_completion_service.py tests\\unit\\test_legacy_chat_stream_adapter.py --junitxml test-reports\\ipd-ipd-20260527-034923-qa.junit.xml",
+      "result": "passed",
+      "passedCount": 15,
+      "failedCount": 0,
+      "warnings": [
+        "Pydantic dependency emitted a min_items deprecation warning during test execution."
+      ]
+    },
+    "compileValidation": {
+      "command": ".\\.venv\\Scripts\\python.exe -m compileall chat_completion_service.py openai_compatible_api.py openai_ingress_models.py legacy_chat_stream_adapter.py route_resolver.py",
+      "result": "passed"
+    },
+    "sliceCoverageNotes": [
+      "chat_completion_service.py observed 87% coverage in the focused QA run.",
+      "openai_compatible_api.py observed 66% coverage in the focused QA run.",
+      "legacy_chat_stream_adapter.py observed 82% coverage in the focused QA run.",
+      "openai_ingress_models.py observed 100% coverage in the focused QA run.",
+      "route_resolver.py observed 57% coverage in the focused QA run."
+    ]
+  },
+  "candidateDeliveryManifest": {
+    "candidateId": "candidate-ipd-20260527-034923-gateway-mvp",
+    "module": "TriStaciss",
+    "deliveryDecision": "allow-progression-to-deployment-stage",
+    "primaryContracts": [
+      "GET /v1/models",
+      "POST /v1/chat/completions",
+      "Legacy /api/chat/stream single-chat migration adapter"
+    ],
+    "includedEvidence": [
+      "test-reports/ipd-ipd-20260527-034923-qa.junit.xml",
+      "test-reports/ipd-ipd-20260527-034923-qa-report.md",
+      "test-reports/ipd-ipd-20260527-034923-redteam.md",
+      "test-reports/ipd-ipd-20260527-034923-redteam.junit.xml"
+    ],
+    "outOfScope": [
+      "TriAvatar default entry switch",
+      "TriMem coding, schema, and user-system work",
+      "OpenAI-compatible /v1/responses implementation",
+      "Production-grade auth, quota, tenant isolation, and broader policy enforcement"
+    ],
+    "knownIssues": [
+      {
+        "severity": "warning",
+        "message": "A Pydantic dependency deprecation warning remains in the current test environment."
+      },
+      {
+        "severity": "warning",
+        "message": "Focused QA coverage for route_resolver.py and openai_compatible_api.py is still partial, so broader follow-up coverage remains desirable beyond this MVP gate."
+      }
+    ],
+    "recommendedNextStage": "DEPLOYMENT"
+  },
+  "evidenceRefs": [
+    "D:/OneDrive/Code/ai/TriStaciss/api-server/test-reports/ipd-ipd-20260527-034923-qa.junit.xml",
+    "D:/OneDrive/Code/ai/TriStaciss/api-server/test-reports/ipd-ipd-20260527-034923-qa-report.md",
+    "D:/OneDrive/Code/ai/TriStaciss/api-server/test-reports/ipd-ipd-20260527-034923-redteam.md",
+    "D:/OneDrive/Code/ai/TriStaciss/api-server/test-reports/ipd-ipd-20260527-034923-redteam.junit.xml"
+  ]
+}

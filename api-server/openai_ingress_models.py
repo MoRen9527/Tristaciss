@@ -157,6 +157,7 @@ class OpenAIErrorResponse(StrictModel):
 class LegacyChatStreamRequest(StrictModel):
     query: str = Field(..., min_length=1)
     provider: Optional[str] = None
+    model: Optional[str] = None
     config: Optional[Dict[str, Any]] = None
     chat_mode: Literal["single", "group"] = Field(default="single", alias="chat_mode")
     group_settings: Optional[Dict[str, Any]] = Field(default=None, alias="group_settings")

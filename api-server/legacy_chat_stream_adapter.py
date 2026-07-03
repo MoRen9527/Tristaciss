@@ -19,11 +19,19 @@ class LegacyChatStreamAdapter:
             raise ValueError("Legacy adapter only supports single chat migration scaffolding")
 
         route_meta = None
-        if request.provider:
-            route_meta = RouteMeta(provider=request.provider)
+        route_meta_payload = {}
+        if request.provider and request.provider != "auto":
+            route_meta_payload["provider"] = request.provider
+        if request.model:
+            if route_meta_payload:
+                route_meta_payload["model"] = request.model
+
+        if route_meta_payload:
+            route_meta = RouteMeta(**route_meta_payload)
 
         return OpenAIChatCompletionsRequest(
             messages=[OpenAIChatMessage(role="user", content=request.query)],
+            model=request.model or "auto",
             stream=True,
             routeMeta=route_meta,
         )
@@ -32,14 +40,17 @@ class LegacyChatStreamAdapter:
         self,
         request: LegacyChatStreamRequest,
     ) -> AsyncGenerator[LegacySseEvent, None]:
-        translated_request = self.translate_request(request)
         yield LegacySseEvent(type="start")
-        async for chunk in self._chat_completion_service.stream_completion(translated_request):
-            choice = chunk.choices[0] if chunk.choices else None
-            content = choice.delta.content if choice and choice.delta else None
-            if content:
-                yield LegacySseEvent(type="content", content=content)
-        yield LegacySseEvent(type="end")
+        try:
+            translated_request = self.translate_request(request)
+            async for chunk in self._chat_completion_service.stream_completion(translated_request):
+                choice = chunk.choices[0] if chunk.choices else None
+                content = choice.delta.content if choice and choice.delta else None
+                if content:
+                    yield LegacySseEvent(type="content", content=content)
+            yield LegacySseEvent(type="end")
+        except Exception as exc:
+            yield LegacySseEvent(type="error", error=str(exc))
 
 
 def legacy_event_to_sse(event: LegacySseEvent) -> str:
