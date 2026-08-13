@@ -214,19 +214,38 @@ class OpenAIProvider(BaseModelProvider):
                 async for chunk in response:
                     if chunk.choices and len(chunk.choices) > 0:
                         choice = chunk.choices[0]
-                        
-                        if choice.delta and choice.delta.content:
+
+                        # ②修复：流式 tool_calls 片段（OpenAI SDK delta.tool_calls
+                        # 为 [{index,id,type,function:{name,arguments}}]，arguments
+                        # 按片累积——这里原样透传片段，由上层按 index 合并）
+                        delta_tool_calls = None
+                        if choice.delta and getattr(choice.delta, "tool_calls", None):
+                            delta_tool_calls = [
+                                {
+                                    "index": tc.index,
+                                    "id": getattr(tc, "id", None),
+                                    "type": getattr(tc, "type", "function"),
+                                    "function": {
+                                        "name": tc.function.name if tc.function and getattr(tc.function, "name", None) else None,
+                                        "arguments": tc.function.arguments if tc.function and getattr(tc.function, "arguments", None) else "",
+                                    },
+                                }
+                                for tc in choice.delta.tool_calls
+                            ]
+
+                        if (choice.delta and choice.delta.content) or delta_tool_calls:
                             chunk_count += 1
-                            
+
                             yield StreamChunk(
-                                content=choice.delta.content,
+                                content=choice.delta.content if choice.delta and choice.delta.content else "",
                                 chunk_id=chunk_count,
                                 request_id=request_id,
                                 timestamp=time.time(),
                                 model=model,
-                                provider=self.provider_name
+                                provider=self.provider_name,
+                                tool_calls=delta_tool_calls,
                             )
-                            
+
                         # 检查完成状态
                         if choice.finish_reason is not None:
                             logger.info(f"OpenAI完成 - 原因: {choice.finish_reason}")
@@ -247,14 +266,31 @@ class OpenAIProvider(BaseModelProvider):
                             "total_tokens": response.usage.total_tokens
                         }
                     
+                    # ②修复：非流式 tool_calls（完整列表）
+                    full_tool_calls = None
+                    raw_tool_calls = getattr(response.choices[0].message, "tool_calls", None)
+                    if raw_tool_calls:
+                        full_tool_calls = [
+                            {
+                                "id": tc.id,
+                                "type": getattr(tc, "type", "function"),
+                                "function": {
+                                    "name": tc.function.name if tc.function and getattr(tc.function, "name", None) else None,
+                                    "arguments": tc.function.arguments if tc.function and getattr(tc.function, "arguments", None) else "",
+                                },
+                            }
+                            for tc in raw_tool_calls
+                        ]
+
                     yield StreamChunk(
-                        content=content,
+                        content=content or "",
                         chunk_id=1,
                         request_id=request_id,
                         timestamp=time.time(),
                         model=model,
                         provider=self.provider_name,
-                        usage=usage_info
+                        usage=usage_info,
+                        tool_calls=full_tool_calls,
                     )
                     
         except Exception as e:

@@ -89,7 +89,9 @@ class TmvRouteMeta(StrictModel):
 
 class AssistantMessage(StrictModel):
     role: Literal["assistant"] = "assistant"
-    content: str = Field(..., min_length=1)
+    # ②修复：tool 调用轮次 content 可为空（仅 tool_calls）
+    content: Optional[str] = Field(default=None)
+    tool_calls: Optional[List[Any]] = Field(default=None)
 
 
 class CompletionChoice(StrictModel):
@@ -117,6 +119,8 @@ class OpenAIChatCompletionsResponse(StrictModel):
 class DeltaMessage(StrictModel):
     role: Optional[Literal["assistant"]] = None
     content: Optional[str] = None
+    # ②修复：流式 tool_calls 片段（OpenAI 格式，按 index 累积）
+    tool_calls: Optional[List[Any]] = Field(default=None)
 
 
 class ChunkChoice(StrictModel):

@@ -119,11 +119,18 @@ class AnthropicResponseTextBlock(BaseModel):
     text: str
 
 
+class AnthropicToolUseBlock(BaseModel):
+    type: Literal["tool_use"] = "tool_use"
+    id: str
+    name: str
+    input: Dict[str, Any] = Field(default_factory=dict)
+
+
 class AnthropicMessagesResponse(BaseModel):
     id: str
     type: Literal["message"] = "message"
     role: Literal["assistant"] = "assistant"
-    content: List[AnthropicResponseTextBlock]
+    content: List[Any] = Field(default_factory=list)
     model: str
     stop_reason: Optional[str] = None
     stop_sequence: Optional[str] = None
@@ -244,12 +251,30 @@ async def messages_handler(request: AnthropicMessagesRequest):
         openai_req = _to_openai_request(request)
         openai_resp = await service.create_completion(openai_req)
 
-        content_text = openai_resp.choices[0].message.content if openai_resp.choices else ""
+        # ②修复：响应面 tool_use 接线——backend tool_calls →
+        # Anthropic tool_use content blocks（非流式）
+        content_blocks: List[Any] = []
+        message = openai_resp.choices[0].message if openai_resp.choices else None
+        if message and message.content:
+            content_blocks.append(AnthropicResponseTextBlock(text=message.content))
+        if message and message.tool_calls:
+            for tc in message.tool_calls:
+                try:
+                    tool_input = json.loads(tc["function"]["arguments"]) if tc["function"]["arguments"] else {}
+                except (ValueError, TypeError):
+                    tool_input = {}
+                content_blocks.append(AnthropicToolUseBlock(
+                    id=tc.get("id") or f"toolu_{uuid.uuid4().hex[:12]}",
+                    name=tc["function"]["name"] or "",
+                    input=tool_input,
+                ))
+
+        stop_reason = "tool_use" if (message and message.tool_calls) else "end_turn"
         return AnthropicMessagesResponse(
             id=f"msg_{openai_resp.id}",
-            content=[AnthropicResponseTextBlock(text=content_text)],
+            content=content_blocks,
             model=openai_resp.model,
-            stop_reason="end_turn",
+            stop_reason=stop_reason,
             usage=AnthropicUsage(
                 input_tokens=openai_resp.usage.prompt_tokens if openai_resp.usage else 0,
                 output_tokens=openai_resp.usage.completion_tokens if openai_resp.usage else 0,
@@ -301,6 +326,10 @@ async def _stream_messages(
     tmv_meta: Optional[Dict[str, Any]] = None
 
     try:
+        # ②修复：流式 tool_calls 片段按 index 合并
+        tool_acc: Dict[int, Dict[str, Any]] = {}
+        next_block_index = 0
+
         async for chunk in service.stream_completion(openai_req):
             if chunk.model:
                 resolved_model = chunk.model
@@ -309,6 +338,7 @@ async def _stream_messages(
 
             delta_text: Optional[str] = None
             finish_reason: Optional[str] = None
+            delta_tool_calls: List[Any] = []
             if chunk.choices:
                 choice = chunk.choices[0]
                 if choice.delta:
@@ -327,12 +357,14 @@ async def _stream_messages(
                             },
                         })
                         stream_started = True
-                        continue
                     if choice.delta.content:
                         delta_text = choice.delta.content
+                    if choice.delta.tool_calls:
+                        delta_tool_calls = choice.delta.tool_calls
                 if choice.finish_reason:
                     finish_reason = choice.finish_reason
 
+            # text content block (index 0)
             if delta_text and not content_block_opened:
                 yield _sse_event("content_block_start", {
                     "type": "content_block_start",
@@ -349,16 +381,52 @@ async def _stream_messages(
                 })
                 total_output_tokens += len(delta_text) // 4
 
+            # tool_use blocks (index ≥ 1)
+            for tc in delta_tool_calls:
+                tc_index = tc.get("index", 0) + 1  # Anthropic block index offset
+                if tc_index not in tool_acc:
+                    tool_acc[tc_index] = {
+                        "id": tc.get("id") or f"toolu_{uuid.uuid4().hex[:12]}",
+                        "name": (tc.get("function") or {}).get("name") or "",
+                        "arguments": "",
+                    }
+                    yield _sse_event("content_block_start", {
+                        "type": "content_block_start",
+                        "index": tc_index,
+                        "content_block": {
+                            "type": "tool_use",
+                            "id": tool_acc[tc_index]["id"],
+                            "name": tool_acc[tc_index]["name"],
+                            "input": {},
+                        },
+                    })
+                args_delta = (tc.get("function") or {}).get("arguments") or ""
+                if args_delta:
+                    tool_acc[tc_index]["arguments"] += args_delta
+                    yield _sse_event("content_block_delta", {
+                        "type": "content_block_delta",
+                        "index": tc_index,
+                        "delta": {"type": "input_json_delta", "partial_json": args_delta},
+                    })
+                next_block_index = max(next_block_index, tc_index)
+
             if finish_reason:
+                # close text block then tool blocks
                 if content_block_opened:
                     yield _sse_event("content_block_stop", {
                         "type": "content_block_stop",
                         "index": 0,
                     })
+                for tc_index in sorted(tool_acc.keys()):
+                    yield _sse_event("content_block_stop", {
+                        "type": "content_block_stop",
+                        "index": tc_index,
+                    })
+                anthropic_stop = "tool_use" if tool_acc else _STOP_REASON_ANTHROPIC.get(finish_reason, "end_turn")
                 yield _sse_event("message_delta", {
                     "type": "message_delta",
                     "delta": {
-                        "stop_reason": _STOP_REASON_ANTHROPIC.get(finish_reason, "end_turn"),
+                        "stop_reason": anthropic_stop,
                         "stop_sequence": None,
                     },
                     "usage": {"output_tokens": total_output_tokens},

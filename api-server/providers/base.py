@@ -54,6 +54,9 @@ class StreamChunk(BaseModel):
     model: str = Field(..., description="使用的模型")
     provider: str = Field(..., description="提供商")
     usage: Optional[Dict[str, int]] = Field(None, description="Token使用统计")
+    # ②修复：工具调用（OpenAI 格式 [{id,type,function:{name,arguments}}]；
+    # 流式为分片列表、非流式为完整列表）
+    tool_calls: Optional[List[Dict[str, Any]]] = Field(None, description="工具调用")
 
 class CompletionResponse(BaseModel):
     """完成响应"""

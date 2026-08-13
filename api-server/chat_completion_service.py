@@ -51,12 +51,13 @@ class ChatCompletionService:
     async def create_completion(self, request: OpenAIChatCompletionsRequest) -> OpenAIChatCompletionsResponse:
         resolved_route = self._route_resolver.resolve_chat_completion(request)
         request_id = str(uuid.uuid4())
-        content, usage, execution_route = await self._execute_non_stream(request, resolved_route)
+        content, tool_calls, usage, execution_route = await self._execute_non_stream(request, resolved_route)
         return build_completion_response(
             request_id=request_id,
             resolved_route=execution_route,
             content=content,
             usage=usage,
+            tool_calls=tool_calls,
         )
 
     async def stream_completion(self, request: OpenAIChatCompletionsRequest) -> AsyncGenerator[OpenAIChatCompletionChunk, None]:
@@ -86,7 +87,9 @@ class ChatCompletionService:
                     max_tokens=request.max_tokens or 2000,
                     **({"tools": request.tools, "tool_choice": request.tool_choice} if request.tools else {}),
                 ):
-                    if chunk.content:
+                    # ②修复：tool_calls 轮次 content 为空——守卫放宽为
+                    # 有内容或有工具调用都透传
+                    if chunk.content or chunk.tool_calls:
                         if not emitted_role:
                             yield self._build_role_chunk(request_id=request_id, resolved_route=execution_route)
                             emitted_role = True
@@ -97,7 +100,10 @@ class ChatCompletionService:
                             choices=[
                                 ChunkChoice(
                                     index=0,
-                                    delta=DeltaMessage(content=chunk.content),
+                                    delta=DeltaMessage(
+                                        content=chunk.content or None,
+                                        tool_calls=chunk.tool_calls,
+                                    ),
                                     finish_reason=None,
                                 )
                             ],
@@ -204,7 +210,7 @@ class ChatCompletionService:
         self,
         request: OpenAIChatCompletionsRequest,
         resolved_route: ResolvedRoute,
-    ) -> tuple[str, Optional[Dict[str, int]], ResolvedRoute]:
+    ) -> tuple[str, Optional[List[Any]], Optional[Dict[str, int]], ResolvedRoute]:
         normalized_messages = self.normalize_messages(request)
         attempted_routes: list[str] = []
         last_error: Optional[str] = None
@@ -218,6 +224,7 @@ class ChatCompletionService:
 
             response_content = ""
             usage_info: Optional[Dict[str, int]] = None
+            tool_calls: Optional[List[Any]] = None
             try:
                 async for chunk in provider.chat_completion(
                     messages=normalized_messages,
@@ -231,6 +238,8 @@ class ChatCompletionService:
                         response_content += chunk.content
                     if chunk.usage:
                         usage_info = chunk.usage
+                    if chunk.tool_calls:
+                        tool_calls = chunk.tool_calls
             except ProviderError as exc:
                 last_error = str(exc)
                 if response_content:
@@ -241,10 +250,11 @@ class ChatCompletionService:
                     ) from exc
                 continue
 
-            if not response_content:
+            # ②修复：tool_calls 轮次 content 为空是正常语义——不再填桩文本
+            if not response_content and not tool_calls:
                 response_content = self._build_placeholder_content(request, execution_route)
 
-            return response_content, usage_info, execution_route
+            return response_content, tool_calls, usage_info, execution_route
 
         raise ProviderFallbackError(
             "No OpenAI-compatible execution route completed successfully",
@@ -328,6 +338,7 @@ def build_completion_response(
     resolved_route: ResolvedRoute,
     content: str,
     usage: Optional[Dict[str, int]] = None,
+    tool_calls: Optional[List[Any]] = None,
 ) -> OpenAIChatCompletionsResponse:
     usage_stats = usage or {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     return OpenAIChatCompletionsResponse(
@@ -337,8 +348,11 @@ def build_completion_response(
         choices=[
             CompletionChoice(
                 index=0,
-                message=AssistantMessage(content=content),
-                finish_reason="stop",
+                message=AssistantMessage(
+                    content=content or None,
+                    tool_calls=tool_calls,
+                ),
+                finish_reason="tool_calls" if tool_calls else "stop",
             )
         ],
         usage=UsageStats(**usage_stats),
