@@ -25,6 +25,10 @@ from openai_compatible_api import (
     get_chat_completion_service,
     router as openai_compatible_router,
 )
+from anthropic_ingress import (
+    configure_anthropic_ingress,
+    router as anthropic_ingress_router,
+)
 from legacy_chat_stream_adapter import LegacyChatStreamAdapter, legacy_event_to_sse
 from fastapi.responses import StreamingResponse, JSONResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -223,6 +227,11 @@ app.include_router(exchange_rate_router)
 # 配置并挂载 OpenAI-compatible ingress 骨架路由。
 configure_openai_compatible_router(provider_manager)
 app.include_router(openai_compatible_router)
+
+# A': Anthropic-compatible ingress (POST /v1/messages) — 同一服务栈，
+# route_resolver 的 tmv-* 别名映射自动生效（无第二套映射）。
+configure_anthropic_ingress(provider_manager)
+app.include_router(anthropic_ingress_router)
 
 # 包含简化配置API路由
 
