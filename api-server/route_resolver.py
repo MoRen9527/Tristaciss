@@ -46,6 +46,7 @@ class RouteResolver:
             raise RouteResolutionError(f"Unknown provider override: {provider_name}")
 
         model = self._choose_model(
+            provider_name=provider_name,
             explicit_model=route_meta.model if route_meta else None,
             request_model=request.model,
             fallback_model=provider.config.default_model,
@@ -79,6 +80,7 @@ class RouteResolver:
                 continue
 
             model = self._choose_model(
+                provider_name=provider_name,
                 explicit_model=None,
                 request_model=request.model,
                 fallback_model=provider.config.default_model,
@@ -123,6 +125,7 @@ class RouteResolver:
             raise RouteResolutionError("No default provider available")
 
         model = self._choose_model(
+            provider_name=default_provider_name,
             explicit_model=None,
             request_model=request.model,
             fallback_model=default_provider.config.default_model,
@@ -288,11 +291,24 @@ class RouteResolver:
 
         return score, "+".join(reasons) or "balanced_fallback", {"features": features}
 
-    @staticmethod
-    def _choose_model(explicit_model: Optional[str], request_model: Optional[str], fallback_model: Optional[str]) -> str:
+    def _choose_model(
+        self,
+        provider_name: str,
+        explicit_model: Optional[str],
+        request_model: Optional[str],
+        fallback_model: Optional[str],
+    ) -> str:
         for candidate in (explicit_model, request_model, fallback_model):
             if candidate and candidate != "auto":
-                return candidate
+                return self._apply_model_aliases(provider_name, candidate)
         if fallback_model:
             return fallback_model
         raise RouteResolutionError("No model could be resolved for the request")
+
+    def _apply_model_aliases(self, provider_name: str, model: str) -> str:
+        """请求名 tmv-* → provider 真实名（定案 A config 级映射）。"""
+        provider = self._provider_manager.get_provider(provider_name)
+        aliases = {}
+        if provider and provider.config and provider.config.model_aliases:
+            aliases = provider.config.model_aliases
+        return aliases.get(model, model)

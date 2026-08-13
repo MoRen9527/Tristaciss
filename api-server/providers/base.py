@@ -27,6 +27,9 @@ class ProviderConfig(BaseModel):
     api_key: str = Field(..., description="API密钥")
     base_url: Optional[str] = Field(None, description="API基础URL")
     default_model: Optional[str] = Field(None, description="默认模型")
+    # 请求名别名（定案 A：tmv-deepseek-v4-pro → deepseek-v4-pro 等），
+    # 来自 provider_configs.json 的 model_aliases 段；None = 无别名。
+    model_aliases: Optional[Dict[str, str]] = Field(None, description="模型名别名映射")
     extra_headers: Optional[Dict[str, str]] = Field(None, description="额外请求头")
     timeout: Optional[int] = Field(60, description="请求超时时间(秒)")
 

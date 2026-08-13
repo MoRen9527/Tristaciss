@@ -84,7 +84,8 @@ class ProviderManager:
                         provider_type=provider_type,
                         api_key=runtime_api_key,
                         base_url=saved_config.get('base_url', ''),
-                        default_model=saved_config.get('default_model', '')
+                        default_model=saved_config.get('default_model', ''),
+                        model_aliases=saved_config.get('model_aliases'),
                     )
 
                     success = self.register_provider(provider_name, config, skip_validation=True)

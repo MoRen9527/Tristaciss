@@ -180,6 +180,18 @@ class ChatCompletionService:
             seen.add(key)
             cards.append(_build_model_card(model_id=default_model, owned_by=provider_name))
 
+        # 定案 A：provider 的 model_aliases 键（tmv-* 请求名）以别名卡片形式
+        # 暴露在 /v1/models，与真实名卡片并存。
+        for provider_name in self._provider_manager.provider_names:
+            provider = self._provider_manager.get_provider(provider_name)
+            aliases = provider.config.model_aliases if provider and provider.config else {}
+            for alias_name in aliases.keys():
+                key = (alias_name, provider_name)
+                if key in seen:
+                    continue
+                seen.add(key)
+                cards.append(_build_model_card(model_id=alias_name, owned_by=provider_name))
+
         cards.sort(key=lambda item: (item.owned_by, item.id))
         return OpenAIModelsResponse(data=cards)
 
