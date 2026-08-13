@@ -61,6 +61,10 @@ class OpenAIChatCompletionsRequest(StrictModel):
     tag: Optional[str] = Field(default=None)
     model_tag: Optional[str] = Field(default=None, alias="modelTag")
     route_meta: Optional[RouteMeta] = Field(default=None, alias="routeMeta")
+    # Tools（OpenAI 格式：{type:"function", function:{name,description,parameters}}）
+    # A' ④修复：anthropic ingress 放行并转换后透传给 provider。
+    tools: Optional[List[Any]] = Field(default=None)
+    tool_choice: Optional[Any] = Field(default=None)
     workspace: Optional[WorkspaceContext] = Field(default=None)
     policy: Optional[PolicyContext] = Field(default=None)
     task_hint: Optional[TaskHint] = Field(default=None, alias="taskHint")

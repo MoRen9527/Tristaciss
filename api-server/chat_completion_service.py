@@ -84,6 +84,7 @@ class ChatCompletionService:
                     stream=True,
                     temperature=request.temperature or 0.7,
                     max_tokens=request.max_tokens or 2000,
+                    **({"tools": request.tools, "tool_choice": request.tool_choice} if request.tools else {}),
                 ):
                     if chunk.content:
                         if not emitted_role:
@@ -224,6 +225,7 @@ class ChatCompletionService:
                     stream=False,
                     temperature=request.temperature or 0.7,
                     max_tokens=request.max_tokens or 2000,
+                    **({"tools": request.tools, "tool_choice": request.tool_choice} if request.tools else {}),
                 ):
                     if chunk.content:
                         response_content += chunk.content

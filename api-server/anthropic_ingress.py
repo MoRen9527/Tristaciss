@@ -94,6 +94,11 @@ class AnthropicMessagesRequest(BaseModel):
     stream: bool = Field(default=False)
     system: Optional[str] = Field(default=None)
     temperature: Optional[float] = Field(default=None, ge=0, le=2)
+    # Tools in Anthropic format: {name, description, input_schema}
+    # (④修复: agent-loop 请求带 tools，此前 extra_forbid 422 → 100% 走
+    # fallback；现放行并转换为 OpenAI 格式透传给 provider)
+    tools: Optional[List[Dict[str, Any]]] = Field(default=None)
+    tool_choice: Optional[Any] = Field(default=None)
     # TriStaciss extensions (passthrough, aligned with the OpenAI ingress)
     tag: Optional[str] = Field(default=None)
     model_tag: Optional[str] = Field(default=None, alias="modelTag")
@@ -177,12 +182,30 @@ def _to_openai_request(req: AnthropicMessagesRequest) -> OpenAIChatCompletionsRe
             text = content
         messages.append(OpenAIChatMessage(role=msg.role, content=text))
 
+    # Anthropic tools ({name, description, input_schema}) → OpenAI tools
+    # ({type:"function", function:{name, description, parameters}})
+    openai_tools: Optional[List[Dict[str, Any]]] = None
+    if req.tools:
+        openai_tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": t.get("name", ""),
+                    "description": t.get("description", ""),
+                    "parameters": t.get("input_schema", {"type": "object", "properties": {}}),
+                },
+            }
+            for t in req.tools
+        ]
+
     return OpenAIChatCompletionsRequest(
         model=req.model,
         messages=messages,
         stream=req.stream,
         temperature=req.temperature,
         max_tokens=req.max_tokens,
+        tools=openai_tools,
+        tool_choice=req.tool_choice,
         tag=req.tag,
         model_tag=req.model_tag,
         route_meta=req.route_meta,
