@@ -48,11 +48,16 @@ def main():
         print("   ✅ 应用实例获取成功")
         
         print("5. 启动服务器...")
+        # 常驻化生产口径（2026-09-02 CTO 派工令 a 件）：缺省 127.0.0.1 + reload 关。
+        # 本地 listener 禁外部入站（通道 spec §三.2 同构）；dev 需要时 env 显式开。
+        host = os.environ.get("TRISTACISS_HOST", "127.0.0.1")
+        port = int(os.environ.get("TRISTACISS_PORT", "8008"))
+        reload_on = os.environ.get("TRISTACISS_RELOAD", "").lower() in ("1", "true", "yes")
         uvicorn.run(
-            "fastapi_stream:app", 
-            host="0.0.0.0", 
-            port=8008, 
-            reload=True,
+            "fastapi_stream:app",
+            host=host,
+            port=port,
+            reload=reload_on,
             timeout_keep_alive=120,
             log_level="debug"
         )
