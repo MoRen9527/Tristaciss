@@ -17,7 +17,10 @@ $workDir = Join-Path $RepoRoot 'api-server'
 if (-not (Test-Path $venvPython)) { throw "venv python 不存在: $venvPython" }
 if (-not (Test-Path (Join-Path $workDir 'start_server.py'))) { throw "start_server.py 不存在于: $workDir" }
 
-$action = New-ScheduledTaskAction -Execute $venvPython -Argument 'start_server.py' -WorkingDirectory $workDir
+# GBK emoji 崩启双保险（CTO 补令第四件 2026-09-02）：-X utf8 ≡ PYTHONUTF8=1
+# （UTF-8 mode，Python 3.7+）——原生 Task 结构直接进 Argument，免 cmd set 包装
+# 引号方言问题；start_server.py 内 reconfigure 为主保险，此处为辅。
+$action = New-ScheduledTaskAction -Execute $venvPython -Argument '-X utf8 start_server.py' -WorkingDirectory $workDir
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $UserId
 $trigger.Delay = 'PT1M'  # schtasks /DELAY 0001:00 等价（ISO8601 时长）
 

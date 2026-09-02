@@ -7,6 +7,17 @@ import multiprocessing
 import os
 import platform
 
+# GBK 控制台 emoji 崩启修复（CTO 补令第四件 2026-09-02）：ONLOGON 任务无交互
+# 控制台，缺省 GBK 代码页打印 emoji 即 UnicodeEncodeError 崩启。强制 stdout/
+# stderr UTF-8（Python 3.7+ reconfigure；防御式——stdout 缺失/不可 reconfigure
+# 时静默跳过）。包装层双保险见 register-tristaciss-task.ps1（python -X utf8）。
+for _stream in (sys.stdout, sys.stderr):
+    if _stream is not None and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
 print("正在启动服务器...")
 
 def main():
