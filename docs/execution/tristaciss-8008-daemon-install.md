@@ -2,7 +2,7 @@
 
 - sourceOfTruth: 本件（Tristaciss/docs/execution/，LG-026 A 案配套 2026-09-02）；syncMode: static；lastSyncedAt: 2026-09-02
 - 性质：**候裁件**——BOD 裁前不安装；本件与 `api-server/register-tristaciss-task.ps1`、`api-server/start_server.py` 修正（CTO 派工令 a 件）三件一体
-- 现役约束：现役单实例（api-server\.venv PID 29644）零接触不重启；本常驻化任务**不与现役并行抢 8008**
+- 现役约束：现役单实例零接触不重启（**现役 8008 监听 PID 以 netstat 实查为准——实例随验证轮换，勿硬编码具体 PID 防再腐**〔BOD 勘误 2026-09-02：29644 已死于 depth 排查树杀，现役为内联验证实例〕）；本常驻化任务**不与现役并行抢 8008**
 
 ## 一、内容三件
 
@@ -28,7 +28,7 @@
 
 **前置检查（一次性）**：
 
-- 确认现役实例处置：新任务在**下次登录**才自动拉起；若届时现役 PID 29644 仍在跑会端口冲突——切换日先停现役（由 BOD 指定时窗，非本件自动做）
+- 确认现役实例处置：新任务在**下次登录**才自动拉起；若届时现役 8008 监听实例仍在跑会端口冲突——切换日先停当前 8008 监听实例（**netstat 查 PID，通用句防 PID 腐**〔BOD 勘误+提速提案 2026-09-02：CEO 设完用户级 env 后可免候重登录，PowerShell 读 User 作用域值内联注入+换血重启当晚即验，与 ONLOGON 常驻两段互不阻塞〕，由 BOD 指定时窗，非本件自动做）
 - 确认 venv 存在：`D:\Code\ai\Tristaciss\.venv\Scripts\python.exe`
 
 **口径一（推荐，PowerShell）**——工作目录由任务原生支持：
